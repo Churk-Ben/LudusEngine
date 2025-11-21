@@ -4,9 +4,9 @@ from logging.handlers import TimedRotatingFileHandler
 
 
 THIS_DIR = os.path.abspath(os.path.dirname(__file__))
-LOG_DIR = os.path.abspath(os.path.join(THIS_DIR, "..", "..", "logs"))
+LOG_DIR = os.path.abspath(os.path.join(THIS_DIR, "..", "logs"))
 os.makedirs(LOG_DIR, exist_ok=True)
-DEFAULT_LOGFILE = os.path.join(LOG_DIR, "chaoxing.log")
+DEFAULT_LOGFILE = os.path.join(LOG_DIR, "ludus.log")
 
 FORMATTER = logging.Formatter(
     "%(asctime)s [%(levelname)s] %(name)s - %(message)s", "%Y-%m-%d %H:%M:%S"
