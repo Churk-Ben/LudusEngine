@@ -209,3 +209,7 @@ __marimo__/
 .vscode/
 .trae/
 .idea/
+
+build/
+temp/
+log/
