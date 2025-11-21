@@ -1,0 +1,106 @@
+:root {
+  --bg: #ffffff;
+  --text: #24292f;
+  --muted: #57606a;
+  --border: #d0d7de;
+  --primary: #0969da;
+  --surface: #f6f8fa;
+}
+
+[data-theme="dark"] {
+  --bg: #0d1117;
+  --text: #c9d1d9;
+  --muted: #8b949e;
+  --border: #30363d;
+  --primary: #58a6ff;
+  --surface: #161b22;
+}
+
+* { box-sizing: border-box }
+html, body, #app { height: 100% }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+}
+
+.app {
+  display: grid;
+  grid-template-rows: 56px 1fr;
+  height: 100%;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  padding: 0 12px;
+  background: var(--surface);
+}
+
+.brand { font-weight: 600 }
+
+.container {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 0;
+  height: 100%;
+}
+
+.sidebar {
+  border-right: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.nav {
+  list-style: none;
+  margin: 0;
+  padding: 8px;
+}
+
+.nav a {
+  display: block;
+  padding: 8px 10px;
+  border-radius: 6px;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.nav a.active { background: rgba(9, 105, 218, 0.12); color: var(--primary) }
+
+.main { padding: 12px }
+
+.toolbar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.input, .select, .button {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.button {
+  cursor: pointer;
+}
+
+.card { border: 1px solid var(--border); border-radius: 8px; padding: 12px; background: var(--bg) }
+
+.grid { display: grid; gap: 12px }
+
+.grid.cols-2 { grid-template-columns: 1fr 1fr }
+
+.muted { color: var(--muted) }
+
+.flex { display: flex; gap: 8px; align-items: center }
+
+.space { flex: 1 }
+
+.fade-enter-active, .fade-leave-active { transition: opacity .18s ease }
+.fade-enter-from, .fade-leave-to { opacity: 0 }

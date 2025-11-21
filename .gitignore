@@ -213,3 +213,6 @@ __marimo__/
 build/
 temp/
 log/
+res/app/node_modules/
+res/app/static/
+res/app/.vite/
