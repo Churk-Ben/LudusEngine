@@ -22,6 +22,40 @@
     }
   },
   "role": {
+    "manager": {
+      "title": "Created Players"
+    },
+    "sections": {
+      "human": "Human Player",
+      "llm": "Large Language Model"
+    },
+    "empty": "No roles",
+    "addRole": "Add Role",
+    "modal": {
+      "title": "Create Role",
+      "type": {
+        "label": "Role Type",
+        "human": "Human",
+        "online": "Online Model",
+        "local": "Local Model"
+      },
+      "fields": {
+        "roleName": "Role Name",
+        "provider": "Provider",
+        "modelName": "Model Name",
+        "api": "API",
+        "localPath": "Model File Path"
+      },
+      "actions": {
+        "create": "Create",
+        "cancel": "Cancel"
+      }
+    },
+    "validation": {
+      "humanExists": "Human player already exists",
+      "required": "Please complete all fields",
+      "absolutePath": "Please provide an absolute path"
+    },
     "llm": {
       "title": "LLM Player",
       "providerPlaceholder": "Provider/API/Local Model",

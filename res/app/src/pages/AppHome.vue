@@ -1,30 +1,32 @@
 <template>
   <div class="container">
     <div class="row g-3">
-      <div class="col-12">
-        <n-result
-          status="info"
-          :title="t('app.title')"
-          :description="t('app.description')"
-        >
-          <template #icon>
-            <FontAwesomeIcon
-              :icon="faGamepad"
-              size="6x"
-              :style="{ color: '#3BAAFF' }"
-            />
-          </template>
-          <template #footer>
-            <n-space vertical>
-              <n-button @click="$router.push('/local')">
-                {{ t("local.title") }}
-              </n-button>
-              <n-button @click="$router.push('/online')">
-                {{ t("online.title") }}
-              </n-button>
-            </n-space>
-          </template>
-        </n-result>
+      <div class="col-6">
+        <n-card embedded>
+          <n-result
+            status="info"
+            :title="t('app.title')"
+            :description="t('app.description')"
+          >
+            <template #icon>
+              <FontAwesomeIcon
+                :icon="faGamepad"
+                size="6x"
+                :style="{ color: '#3BAAFF' }"
+              />
+            </template>
+            <template #footer>
+              <n-space vertical>
+                <n-button @click="$router.push('/local')">
+                  {{ t("local.title") }}
+                </n-button>
+                <n-button @click="$router.push('/online')">
+                  {{ t("online.title") }}
+                </n-button>
+              </n-space>
+            </template>
+          </n-result>
+        </n-card>
       </div>
     </div>
   </div>
@@ -58,5 +60,7 @@ onMounted(() => {});
 
 .row {
   width: 100%;
+  display: flex;
+  justify-content: center;
 }
 </style>

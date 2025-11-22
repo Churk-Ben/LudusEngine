@@ -22,6 +22,40 @@
     }
   },
   "role": {
+    "manager": {
+      "title": "已创建的玩家列表"
+    },
+    "sections": {
+      "human": "人类玩家",
+      "llm": "大语言模型"
+    },
+    "empty": "无角色",
+    "addRole": "添加角色",
+    "modal": {
+      "title": "创建角色",
+      "type": {
+        "label": "角色类型",
+        "human": "人类",
+        "online": "在线模型",
+        "local": "本地模型"
+      },
+      "fields": {
+        "roleName": "角色名称",
+        "provider": "提供商",
+        "modelName": "模型名称",
+        "api": "API",
+        "localPath": "模型文件路径"
+      },
+      "actions": {
+        "create": "创建",
+        "cancel": "取消"
+      }
+    },
+    "validation": {
+      "humanExists": "已存在人类玩家，无法创建",
+      "required": "请填写完整信息",
+      "absolutePath": "请提供绝对路径"
+    },
     "llm": {
       "title": "LLM玩家",
       "providerPlaceholder": "提供商/API/本地模型",

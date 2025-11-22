@@ -1,95 +1,161 @@
 <template>
   <div class="container">
     <div class="row g-3">
-      <div class="col-12 col-md-6">
-        <n-card>
-          <div class="d-flex align-items-center mb-2">
-            <strong>{{ t("role.llm.title") }}</strong>
-          </div>
-          <div class="row g-2">
-            <div class="col-12">
-              <n-select
-                v-model:value="providerId"
-                :options="providerOptions"
-                :placeholder="t('role.llm.providerPlaceholder')"
-              />
-            </div>
-            <div class="col-12">
-              <n-input
-                v-model:value="llmName"
-                :placeholder="t('role.common.namePlaceholder')"
-              />
-            </div>
-            <div class="col-12">
-              <n-input
-                v-model:value="model"
-                :placeholder="t('role.llm.modelPlaceholder')"
-              />
-            </div>
-            <div class="col-12 d-flex">
-              <div class="ms-auto">
-                <n-button type="primary" @click="addLLM">{{
-                  t("role.common.add")
-                }}</n-button>
+      <div class="col-6">
+        <n-card :title="t('role.manager.title')">
+          <template #header-extra>
+            <n-button type="primary" @click="openCreate">
+              {{ t("role.addRole") }}
+            </n-button>
+          </template>
+          <div class="d-flex flex-column">
+            <section class="my-2">
+              <strong class="d-block mb-2">
+                {{ t("role.sections.human") }}
+              </strong>
+              <div v-if="players.humanPlayers.length === 0">
+                <n-card
+                  embedded
+                  closable
+                  size="small"
+                  :title="t('role.empty')"
+                  @close="openCreate"
+                />
               </div>
-            </div>
-          </div>
-          <div class="row g-2 mt-3">
-            <div class="col-12 text-muted">{{ t("role.common.added") }}</div>
-            <div
-              class="col-12 d-flex"
-              v-for="p in players.llmPlayers"
-              :key="p.id"
-            >
-              <span
-                >{{ p.name }} · {{ providerName(p.providerId) }} ·
-                {{ p.model || t("role.common.notSet") }}</span
-              >
-              <div class="ms-auto">
-                <n-button quaternary @click="players.removePlayer(p.id)">{{
-                  t("role.common.remove")
-                }}</n-button>
+              <div v-else v-for="p in players.humanPlayers" :key="p.id">
+                <n-card
+                  embedded
+                  closable
+                  class="mb-1"
+                  size="small"
+                  :title="p.name"
+                  @close="players.removePlayer(p.id)"
+                />
               </div>
-            </div>
+            </section>
+
+            <section class="my-2">
+              <strong class="d-block mb-2">
+                {{ t("role.sections.llm") }}
+              </strong>
+              <div v-if="players.llmPlayers.length === 0">
+                <n-card
+                  embedded
+                  closable
+                  size="small"
+                  :title="t('role.empty')"
+                  @close="openCreate"
+                />
+              </div>
+              <div v-else v-for="p in players.llmPlayers" :key="p.id">
+                <n-card
+                  embedded
+                  closable
+                  class="mb-1"
+                  size="small"
+                  :title="p.name"
+                  @close="players.removePlayer(p.id)"
+                >
+                  {{ providerName(p.providerId) }} -
+                  {{ p.model || t("role.common.notSet") }}
+                  <!-- <template v-if="p.api">· {{ p.api }}</template> -->
+                </n-card>
+              </div>
+            </section>
           </div>
         </n-card>
-      </div>
-      <div class="col-12 col-md-6">
-        <n-card>
-          <div class="d-flex align-items-center mb-2">
-            <strong>{{ t("role.human.title") }}</strong>
-          </div>
-          <div class="row g-2">
-            <div class="col-12">
-              <n-input
-                v-model:value="meName"
-                :placeholder="t('role.common.namePlaceholder')"
-              />
-            </div>
-            <div class="col-12 d-flex">
-              <div class="ms-auto">
-                <n-button type="primary" @click="addHuman">{{
-                  t("role.common.add")
-                }}</n-button>
+
+        <n-modal
+          v-model:show="showCreate"
+          preset="card"
+          transform-origin="center"
+          :title="t('role.modal.title')"
+          :style="{ width: '640px', maxWidth: '80vw', minHeight: '400px' }"
+        >
+          <div class="container">
+            <div class="row g-2">
+              <div class="col-12">
+                <n-flex justify="space-between">
+                  <label class="me-2 my-3" style="font-weight: bold">
+                    {{ t("role.modal.type.label") }}
+                  </label>
+
+                  <n-radio-group class="mx-2 my-3" v-model:value="createType">
+                    <n-radio value="human">
+                      {{ t("role.modal.type.human") }}
+                    </n-radio>
+                    <n-radio value="online">
+                      {{ t("role.modal.type.online") }}
+                    </n-radio>
+                    <n-radio value="local">
+                      {{ t("role.modal.type.local") }}
+                    </n-radio>
+                  </n-radio-group>
+                </n-flex>
               </div>
-            </div>
-          </div>
-          <div class="row g-2 mt-3">
-            <div class="col-12 text-muted">{{ t("role.common.added") }}</div>
-            <div
-              class="col-12 d-flex"
-              v-for="p in players.humanPlayers"
-              :key="p.id"
-            >
-              <span>{{ p.name }}</span>
-              <div class="ms-auto">
-                <n-button quaternary @click="players.removePlayer(p.id)">{{
-                  t("role.common.remove")
-                }}</n-button>
+
+              <div class="col-12" v-if="createType === 'human'">
+                <n-input
+                  v-model:value="roleName"
+                  :placeholder="t('role.modal.fields.roleName')"
+                />
               </div>
+
+              <template v-if="createType === 'online'">
+                <div class="col-12">
+                  <n-select
+                    v-model:value="providerId"
+                    :options="providerOptions"
+                    :placeholder="t('role.modal.fields.provider')"
+                  />
+                </div>
+                <div class="col-12">
+                  <n-input
+                    v-model:value="modelName"
+                    :placeholder="t('role.modal.fields.modelName')"
+                  />
+                </div>
+                <div class="col-12">
+                  <n-input
+                    v-model:value="apiBase"
+                    :placeholder="t('role.modal.fields.api')"
+                  />
+                </div>
+                <div class="col-12">
+                  <n-input
+                    v-model:value="roleName"
+                    :placeholder="t('role.modal.fields.roleName')"
+                  />
+                </div>
+              </template>
+
+              <template v-if="createType === 'local'">
+                <div class="col-12">
+                  <n-input
+                    v-model:value="modelPath"
+                    :placeholder="t('role.modal.fields.localPath')"
+                  />
+                </div>
+                <div class="col-12">
+                  <n-input
+                    v-model:value="roleName"
+                    :placeholder="t('role.modal.fields.roleName')"
+                  />
+                </div>
+              </template>
             </div>
           </div>
-        </n-card>
+          <template #footer>
+            <n-flex justify="end">
+              <n-button quaternary @click="closeCreate">
+                {{ t("role.modal.actions.cancel") }}
+              </n-button>
+              <n-button type="primary" :disabled="!canCreate" @click="doCreate">
+                {{ t("role.modal.actions.create") }}
+              </n-button>
+            </n-flex>
+          </template>
+        </n-modal>
       </div>
     </div>
   </div>
@@ -98,15 +164,28 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
 import { useI18n } from "vue-i18n";
-import { NCard, NSelect, NInput, NButton } from "naive-ui";
+import {
+  NCard,
+  NButton,
+  NModal,
+  NRadioGroup,
+  NRadio,
+  NSelect,
+  NInput,
+  NFlex,
+} from "naive-ui";
 import { usePlayersStore } from "@/stores/players";
 
 const players = usePlayersStore();
 const { t } = useI18n();
+
+const showCreate = ref(false);
+const createType = ref<"human" | "online" | "local">("human");
+const roleName = ref("");
 const providerId = ref("");
-const llmName = ref("");
-const model = ref("");
-const meName = ref("");
+const modelName = ref("");
+const apiBase = ref("");
+const modelPath = ref("");
 
 const providers = computed(() => players.providers);
 const providerOptions = computed(() =>
@@ -116,22 +195,84 @@ function providerName(id: string) {
   return providers.value.find((x) => x.id === id)?.name || "";
 }
 
-function addLLM() {
-  if (!providerId.value || !llmName.value.trim()) return;
-  players.addLLM({
-    name: llmName.value.trim(),
-    providerId: providerId.value,
-    model: model.value.trim() || undefined,
-  });
-  llmName.value = "";
-  model.value = "";
+function openCreate() {
+  resetForm();
+  showCreate.value = true;
+}
+function closeCreate() {
+  showCreate.value = false;
+}
+function resetForm() {
+  createType.value = "human";
+  roleName.value = "";
+  providerId.value = "";
+  modelName.value = "";
+  apiBase.value = "";
+  modelPath.value = "";
 }
 
-function addHuman() {
-  if (!meName.value.trim()) return;
-  players.addHuman({ name: meName.value.trim() });
-  meName.value = "";
+const canCreate = computed(() => {
+  if (createType.value === "human") {
+    return !!roleName.value.trim() && players.humanPlayers.length === 0;
+  }
+  if (createType.value === "online") {
+    return (
+      !!roleName.value.trim() &&
+      !!providerId.value &&
+      !!modelName.value.trim() &&
+      !!apiBase.value.trim()
+    );
+  }
+  if (createType.value === "local") {
+    const path = modelPath.value.trim();
+    const isAbs = /^[a-zA-Z]:\\/.test(path) || path.startsWith("/");
+    return !!roleName.value.trim() && isAbs;
+  }
+  return false;
+});
+
+function doCreate() {
+  if (createType.value === "human") {
+    if (players.humanPlayers.length > 0) return;
+    players.addHuman({ name: roleName.value.trim() });
+    closeCreate();
+    return;
+  }
+  if (createType.value === "online") {
+    players.addLLM({
+      name: roleName.value.trim(),
+      providerId: providerId.value,
+      model: modelName.value.trim(),
+      api: apiBase.value.trim(),
+    });
+    closeCreate();
+    return;
+  }
+  if (createType.value === "local") {
+    const localProvider =
+      providers.value.find((p) => p.kind === "local")?.id || "local";
+    players.addLLM({
+      name: roleName.value.trim(),
+      providerId: localProvider,
+      model: modelPath.value.trim(),
+    });
+    closeCreate();
+  }
 }
 
 onMounted(() => players.loadProviders());
 </script>
+
+<style scoped>
+.container {
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.row {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+</style>

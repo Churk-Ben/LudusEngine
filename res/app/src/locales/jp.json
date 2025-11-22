@@ -22,6 +22,40 @@
     }
   },
   "role": {
+    "manager": {
+      "title": "作成済みプレイヤー一覧"
+    },
+    "sections": {
+      "human": "人間プレイヤー",
+      "llm": "大規模言語モデル"
+    },
+    "empty": "ロールなし",
+    "addRole": "ロール追加",
+    "modal": {
+      "title": "ロール作成",
+      "type": {
+        "label": "ロールタイプ",
+        "human": "人間",
+        "online": "オンラインモデル",
+        "local": "ローカルモデル"
+      },
+      "fields": {
+        "roleName": "ロール名",
+        "provider": "プロバイダー",
+        "modelName": "モデル名",
+        "api": "API",
+        "localPath": "モデルファイルのパス"
+      },
+      "actions": {
+        "create": "作成",
+        "cancel": "キャンセル"
+      }
+    },
+    "validation": {
+      "humanExists": "人間プレイヤーは既に存在します",
+      "required": "全ての項目を入力してください",
+      "absolutePath": "絶対パスを入力してください"
+    },
     "llm": {
       "title": "LLMプレイヤー",
       "providerPlaceholder": "Provider/API/Local Model",
