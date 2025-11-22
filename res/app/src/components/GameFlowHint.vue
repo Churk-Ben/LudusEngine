@@ -1,16 +1,17 @@
 <template>
-  <div class="card">
+  <n-card>
     <div class="flex">
       <strong>流程</strong>
       <div class="space" />
       <span class="muted">{{ step }}/{{ total }}</span>
     </div>
     <div style="margin-top:8px">{{ hint }}</div>
-  </div>
+  </n-card>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { NCard } from 'naive-ui'
 const props = defineProps<{ steps: string[]; index: number }>()
 const total = computed(() => props.steps.length)
 const step = computed(() => props.index + 1)

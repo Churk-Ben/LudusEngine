@@ -1,5 +1,5 @@
 <template>
-  <div class="card" style="height: 420px; display: grid; grid-template-rows: 1fr auto;">
+  <n-card style="height: 420px; display: grid; grid-template-rows: 1fr auto;">
     <div style="overflow: auto; display: grid; gap: 8px;">
       <div v-for="m in messages" :key="m.id" class="flex">
         <strong>{{ m.author }}</strong>
@@ -9,14 +9,15 @@
       </div>
     </div>
     <div class="flex">
-      <input class="input" v-model="draft" placeholder="输入消息" @keydown.enter="send" />
-      <button class="button" @click="send">发送</button>
+      <n-input v-model:value="draft" placeholder="输入消息" @keydown.enter="send" />
+      <n-button type="primary" @click="send">发送</n-button>
     </div>
-  </div>
+  </n-card>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { NCard, NInput, NButton } from 'naive-ui'
 
 interface Msg { id: string; author: string; text: string; time: string }
 
