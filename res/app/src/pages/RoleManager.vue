@@ -57,7 +57,7 @@
       <div class="col-12 col-md-6">
         <n-card>
           <div class="d-flex align-items-center mb-2">
-            <strong>{{ t("role.me.title") }}</strong>
+            <strong>{{ t("role.human.title") }}</strong>
           </div>
           <div class="row g-2">
             <div class="col-12">

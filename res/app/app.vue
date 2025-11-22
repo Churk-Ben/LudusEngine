@@ -1,5 +1,5 @@
 <template>
-  <n-config-provider :theme="naiveTheme">
+  <n-config-provider :theme="naiveTheme" :inline-theme-disabled="true">
     <div class="app">
       <n-layout has-sider style="height: 100vh">
         <n-layout-sider
@@ -7,7 +7,10 @@
           :width="collapsed ? 64 : 240"
           bordered
         >
-          <div class="d-flex flex-column justify-content-between h-100">
+          <div
+            class="sider-content d-flex flex-column justify-content-between h-100"
+            :style="{ opacity: siderContentVisible ? 1 : 0 }"
+          >
             <n-menu
               class="app-menu"
               :options="menuOptions"
@@ -48,65 +51,80 @@ import {
   NLayoutSider,
   NLayoutContent,
   NMenu,
-  NGrid,
   NIcon,
   darkTheme,
 } from "naive-ui";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 import {
+  faHome,
   faUserGroup,
   faGamepad,
   faGlobe,
-  faAnglesLeft,
-  faAnglesRight,
   faSun,
   faMoon,
   faLanguage,
+  faBars,
 } from "@fortawesome/free-solid-svg-icons";
 
 const { locale, t } = useI18n();
 const route = useRoute();
 const router = useRouter();
 
-const themeMode = ref<"light" | "dark">("light");
-const naiveTheme = computed(() =>
-  themeMode.value === "dark" ? darkTheme : null
-);
-const themeLabel = computed(() =>
-  themeMode.value === "light" ? "暗色" : "亮色"
-);
-
-const collapsed = ref(false);
-
-const localeOptions = [
-  { label: "中文", value: "zh-CN" },
-  { label: "English", value: "en" },
-];
-
-const localeLabel = computed(() =>
-  locale.value === "zh-CN" ? "语言" : "Language"
-);
-
 function renderIcon(icon: any) {
   return () =>
     h(NIcon, { size: 16 }, { default: () => h(FontAwesomeIcon, { icon }) });
 }
 
+// 应用侧边栏折叠状态
+const collapsed = ref(localStorage.getItem("collapsed") === "true");
+const siderContentVisible = ref(true);
+const siderAnimating = ref(false);
+
+function toggleCollapsed() {
+  const duration = 200;
+  if (collapsed.value) {
+    if (siderAnimating.value) return;
+    siderAnimating.value = true;
+    siderContentVisible.value = false;
+    window.setTimeout(() => {
+      collapsed.value = false;
+      localStorage.setItem("collapsed", "false");
+      window.setTimeout(() => {
+        siderContentVisible.value = true;
+        siderAnimating.value = false;
+      }, duration);
+    }, duration);
+  } else {
+    collapsed.value = true;
+    localStorage.setItem("collapsed", "true");
+  }
+}
+
+// 应用菜单选项
+const menuValue = ref(route.path);
 const menuOptions = computed(() => [
-  { label: t("menu.roles"), key: "/roles", icon: renderIcon(faUserGroup) },
-  { label: t("menu.local"), key: "/local", icon: renderIcon(faGamepad) },
-  { label: t("menu.online"), key: "/online", icon: renderIcon(faGlobe) },
+  { label: t("sider.menu.home"), key: "/", icon: renderIcon(faHome) },
+  {
+    label: t("sider.menu.roles"),
+    key: "/roles",
+    icon: renderIcon(faUserGroup),
+  },
+  { label: t("sider.menu.local"), key: "/local", icon: renderIcon(faGamepad) },
+  { label: t("sider.menu.online"), key: "/online", icon: renderIcon(faGlobe) },
 ]);
 
-const menuValue = ref(route.path);
+function onMenu(key: string) {
+  menuValue.value = key;
+  router.push(key);
+}
 
+// 应用控制选项
 const ctrlValue = ref<string | null>(null);
-
 const ctrlOptions = computed(() => [
   {
-    label: collapsed.value ? "展开" : "收起",
+    label: collapsed.value ? t("sider.ctrl.expand") : t("sider.ctrl.collapse"),
     key: "toggleCollapsed",
-    icon: renderIcon(collapsed.value ? faAnglesRight : faAnglesLeft),
+    icon: renderIcon(faBars),
   },
   {
     label: themeLabel.value,
@@ -124,25 +142,6 @@ const ctrlOptions = computed(() => [
   },
 ]);
 
-function toggleTheme() {
-  themeMode.value = themeMode.value === "light" ? "dark" : "light";
-}
-
-function toggleCollapsed() {
-  collapsed.value = !collapsed.value;
-}
-
-function onLocale(v: string) {
-  locale.value = v;
-  localStorage.setItem("locale", v);
-  document.documentElement.lang = v;
-}
-
-function onMenu(key: string) {
-  menuValue.value = key;
-  router.push(key);
-}
-
 function onCtrl(key: string | null) {
   if (!key) return;
   if (key === "toggleCollapsed") {
@@ -155,12 +154,49 @@ function onCtrl(key: string | null) {
   ctrlValue.value = null;
 }
 
-onMounted(() => {
-  const prefersDark =
+// 应用主题模式
+const prefersDark = () => {
+  if (localStorage.getItem("themeMode")) {
+    return localStorage.getItem("themeMode") === "dark";
+  }
+  return (
     window.matchMedia &&
-    window.matchMedia("(prefers-color-scheme: dark)").matches;
-  themeMode.value = prefersDark ? "dark" : "light";
+    window.matchMedia("(prefers-color-scheme: dark)").matches
+  );
+};
+const themeMode = ref<"light" | "dark">(prefersDark() ? "dark" : "light");
+const naiveTheme = computed(() =>
+  themeMode.value === "dark" ? darkTheme : null
+);
+const themeLabel = computed(() =>
+  themeMode.value === "light"
+    ? t("sider.ctrl.theme.dark")
+    : t("sider.ctrl.theme.light")
+);
+
+function toggleTheme() {
+  themeMode.value = themeMode.value === "light" ? "dark" : "light";
+  localStorage.setItem("themeMode", themeMode.value);
+}
+
+// 应用语言选项
+const localeLabel = computed(() => t("sider.ctrl.locale"));
+const localeOptions = [
+  { label: "中文", value: "zh-CN" },
+  { label: "English", value: "en" },
+  { label: "日本語", value: "jp" },
+];
+
+function onLocale(v: string) {
+  locale.value = v;
+  localStorage.setItem("locale", v);
+  document.documentElement.lang = v;
+}
+
+// 应用初始化
+onMounted(() => {
   document.documentElement.lang = locale.value;
+  collapsed.value = localStorage.getItem("collapsed") === "true";
 });
 </script>
 
@@ -174,22 +210,36 @@ onMounted(() => {
 }
 
 .app-sider {
-  transition: all var(--motion-duration) var(--motion-easing);
+  transition: width var(--motion-duration) var(--motion-easing),
+    max-width var(--motion-duration) var(--motion-easing),
+    min-width var(--motion-duration) var(--motion-easing),
+    color var(--motion-duration) var(--motion-easing),
+    background-color var(--motion-duration) var(--motion-easing),
+    border-color var(--motion-duration) var(--motion-easing),
+    flex-basis var(--motion-duration) var(--motion-easing);
 }
 
-.app-menu :deep(.n-menu-item-content) {
-  transition: all var(--motion-duration) var(--motion-easing);
+.sider-content {
+  transition: opacity var(--motion-duration) var(--motion-easing);
 }
 
-.app-ctrl {
-  transition: all var(--motion-duration) var(--motion-easing);
+.app-menu :deep(.n-menu-item-content),
+.app-ctrl:deep(.n-menu-item-content) {
+  transition: color var(--motion-duration) var(--motion-easing),
+    background-color var(--motion-duration) var(--motion-easing),
+    border-color var(--motion-duration) var(--motion-easing),
+    padding var(--motion-duration) var(--motion-easing),
+    margin var(--motion-duration) var(--motion-easing),
+    transform var(--motion-duration) var(--motion-easing);
+  will-change: padding, margin, transform;
+}
+
+.app-menu :deep(.n-menu-item-content__icon),
+.app-ctrl :deep(.n-menu-item-content__icon) {
+  font-size: var(--icon-size);
 }
 
 .app-content {
   padding: var(--padding);
-}
-
-.app-ctrl :deep(.n-menu-item-content__icon) {
-  font-size: var(--icon-size);
 }
 </style>

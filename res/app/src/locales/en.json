@@ -1,0 +1,68 @@
+{
+  "app": {
+    "title": "LudusEngine",
+    "subtitle": "Language Tabletop Platform"
+  },
+  "sider": {
+    "menu": {
+      "home": "Welcome",
+      "roles": "Role Manager",
+      "local": "Local Game",
+      "online": "Online Game"
+    },
+    "ctrl": {
+      "expand": "Expand",
+      "collapse": "Collapse",
+      "locale": "Language",
+      "theme": {
+        "dark": "Dark",
+        "light": "Light"
+      }
+    }
+  },
+  "role": {
+    "llm": {
+      "title": "LLM Player",
+      "providerPlaceholder": "Provider/API/Local Model",
+      "modelPlaceholder": "Model"
+    },
+    "human": {
+      "title": "Human Player"
+    },
+    "common": {
+      "namePlaceholder": "Name",
+      "add": "Add",
+      "added": "Added",
+      "notSet": "Not set",
+      "remove": "Remove"
+    }
+  },
+  "local": {
+    "selectGameTitle": "Select Local Game",
+    "selectPlaceholder": "Please select",
+    "selectPlayersTitle": "Select Players",
+    "startButton": "Enter Game UI",
+    "pluginPlaceholder": "Plugin area reserved for custom styles and interactions",
+    "steps": {
+      "prepare": "Prepare",
+      "deal": "Deal/Assign Roles",
+      "play": "Gameplay",
+      "result": "Result"
+    }
+  },
+  "online": {
+    "lobbyTitle": "Online Lobby",
+    "notOpen": "Not available yet"
+  },
+  "game": {
+    "title": "Game",
+    "chat": {
+      "inputPlaceholder": "Type a message",
+      "send": "Send",
+      "me": "Me"
+    },
+    "flow": {
+      "title": "Flow"
+    }
+  }
+}

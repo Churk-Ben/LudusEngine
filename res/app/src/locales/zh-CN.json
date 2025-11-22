@@ -1,0 +1,68 @@
+{
+  "app": {
+    "title": "Ludus 引擎",
+    "subtitle": "语言类桌游平台"
+  },
+  "sider": {
+    "menu": {
+      "home": "首页",
+      "roles": "角色管理",
+      "local": "本地游戏",
+      "online": "联机游戏"
+    },
+    "ctrl": {
+      "expand": "展开",
+      "collapse": "收起",
+      "locale": "语言",
+      "theme": {
+        "dark": "暗色",
+        "light": "亮色"
+      }
+    }
+  },
+  "role": {
+    "llm": {
+      "title": "LLM玩家",
+      "providerPlaceholder": "提供商/API/本地模型",
+      "modelPlaceholder": "模型"
+    },
+    "human": {
+      "title": "人类玩家"
+    },
+    "common": {
+      "namePlaceholder": "名称",
+      "add": "添加",
+      "added": "已添加",
+      "notSet": "未设定",
+      "remove": "移除"
+    }
+  },
+  "local": {
+    "selectGameTitle": "选择本地游戏",
+    "selectPlaceholder": "请选择",
+    "selectPlayersTitle": "选择参与玩家",
+    "startButton": "进入游戏界面",
+    "pluginPlaceholder": "游戏插件预留空间，供自定义风格与交互",
+    "steps": {
+      "prepare": "准备",
+      "deal": "发牌/分配角色",
+      "play": "游戏进行",
+      "result": "结算"
+    }
+  },
+  "online": {
+    "lobbyTitle": "联机大厅",
+    "notOpen": "暂不开放"
+  },
+  "game": {
+    "title": "游戏",
+    "chat": {
+      "inputPlaceholder": "输入消息",
+      "send": "发送",
+      "me": "我"
+    },
+    "flow": {
+      "title": "流程"
+    }
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "app": {
+    "title": "LudusEngine",
+    "subtitle": "言語ボードゲームプラットフォーム"
+  },
+  "sider": {
+    "menu": {
+      "home": "ホーム",
+      "roles": "ロールマネージャー",
+      "local": "ローカルゲーム",
+      "online": "オンラインゲーム"
+    },
+    "ctrl": {
+      "expand": "展開",
+      "collapse": "縮小",
+      "locale": "言語",
+      "theme": {
+        "dark": "ダーク",
+        "light": "ライト"
+      }
+    }
+  },
+  "role": {
+    "llm": {
+      "title": "LLMプレイヤー",
+      "providerPlaceholder": "Provider/API/Local Model",
+      "modelPlaceholder": "Model"
+    },
+    "human": {
+      "title": "人間プレイヤー"
+    },
+    "common": {
+      "namePlaceholder": "名前",
+      "add": "追加",
+      "added": "追加済み",
+      "notSet": "未設定",
+      "remove": "削除"
+    }
+  },
+  "local": {
+    "selectGameTitle": "ローカルゲームを選択",
+    "selectPlaceholder": "Please select",
+    "selectPlayersTitle": "プレイヤーを選択",
+    "startButton": "ゲームUIに入る",
+    "pluginPlaceholder": "Plugin area reserved for custom styles and interactions",
+    "steps": {
+      "prepare": "準備",
+      "deal": "役割を配布/割り当て",
+      "play": "ゲームプレイ",
+      "result": "結果"
+    }
+  },
+  "online": {
+    "lobbyTitle": "オンラインロビー",
+    "notOpen": "まだ利用できません"
+  },
+  "game": {
+    "title": "ゲーム",
+    "chat": {
+      "inputPlaceholder": "メッセージを入力",
+      "send": "送信",
+      "me": "私"
+    },
+    "flow": {
+      "title": "流れ"
+    }
+  }
+}

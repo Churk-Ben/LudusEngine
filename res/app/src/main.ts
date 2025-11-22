@@ -1,7 +1,7 @@
 import { createApp } from "vue";
 import { createPinia } from "pinia";
 import { createI18n } from "vue-i18n";
-import { messages } from "@/i18n";
+import { messages } from "@/locales/.index";
 import router from "@/router";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "@/styles/theme.css";

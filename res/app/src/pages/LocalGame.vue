@@ -41,9 +41,9 @@
             </div>
             <div class="col-12 d-flex">
               <div class="ms-auto">
-                <n-button type="primary" :disabled="!canStart" @click="start">{{
-                  t("local.startButton")
-                }}</n-button>
+                <n-button type="primary" :disabled="!canStart" @click="start">
+                  {{ t("local.startButton") }}
+                </n-button>
               </div>
             </div>
           </div>
