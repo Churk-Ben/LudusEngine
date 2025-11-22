@@ -12,21 +12,22 @@
 			</div>
 		</div>
 		<div class="flex">
-			<n-input
-				v-model:value="draft"
-				placeholder="输入消息"
-				@keydown.enter="send" />
-			<n-button
-				type="primary"
-				@click="send"
-				>发送</n-button
-			>
+            <n-input
+                v-model:value="draft"
+                :placeholder="t('chat.inputPlaceholder')"
+                @keydown.enter="send" />
+            <n-button
+                type="primary"
+                @click="send"
+                >{{ t('chat.send') }}</n-button
+            >
 		</div>
 	</n-card>
 </template>
 
 <script setup lang="ts">
 import { ref } from "vue";
+import { useI18n } from "vue-i18n";
 import { NCard, NInput, NButton } from "naive-ui";
 
 interface Msg {
@@ -37,16 +38,17 @@ interface Msg {
 }
 
 const messages = ref<Msg[]>([]);
+const { t } = useI18n();
 const draft = ref("");
 
 function send() {
 	if (!draft.value.trim()) return;
-	messages.value.push({
-		id: crypto.randomUUID(),
-		author: "我",
-		text: draft.value.trim(),
-		time: new Date().toLocaleTimeString(),
-	});
+    messages.value.push({
+        id: crypto.randomUUID(),
+        author: t("chat.me"),
+        text: draft.value.trim(),
+        time: new Date().toLocaleTimeString(),
+    });
 	draft.value = "";
 }
 </script>

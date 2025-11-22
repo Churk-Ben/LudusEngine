@@ -13,7 +13,7 @@
 							<span
 								class="brand"
 								v-if="!collapsed"
-								>LudusEngine</span
+								>{{ $t("app.title") }}</span
 							>
 							<div class="space" />
 							<n-button
@@ -94,7 +94,7 @@ import {
 	faLanguage,
 } from "@fortawesome/free-solid-svg-icons";
 
-const { locale } = useI18n();
+const { locale, t } = useI18n();
 const route = useRoute();
 const router = useRouter();
 
@@ -113,11 +113,11 @@ function renderIcon(icon: any) {
 	return () => h(NIcon, { size: 16 }, { default: () => h(FontAwesomeIcon, { icon }) });
 }
 
-const menuOptions = [
-	{ label: "角色管理", key: "/roles", icon: renderIcon(faUserGroup) },
-	{ label: "本地游戏", key: "/local", icon: renderIcon(faGamepad) },
-	{ label: "联机游戏", key: "/online", icon: renderIcon(faGlobe) },
-];
+const menuOptions = computed(() => [
+	{ label: t("menu.roles"), key: "/roles", icon: renderIcon(faUserGroup) },
+	{ label: t("menu.local"), key: "/local", icon: renderIcon(faGamepad) },
+	{ label: t("menu.online"), key: "/online", icon: renderIcon(faGlobe) },
+]);
 
 const menuValue = ref(route.path);
 
@@ -131,6 +131,8 @@ function toggleCollapsed() {
 
 function onLocale(v: string) {
 	locale.value = v;
+	localStorage.setItem("locale", v);
+	document.documentElement.lang = v;
 }
 
 function onMenu(key: string) {
@@ -141,6 +143,7 @@ function onMenu(key: string) {
 onMounted(() => {
 	const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
 	themeMode.value = prefersDark ? "dark" : "light";
+	document.documentElement.lang = locale.value;
 });
 </script>
 

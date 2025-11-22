@@ -3,18 +3,18 @@
 		class="grid"
 		style="min-height: 0">
 		<n-card>
-			<div class="grid">
-				<strong>选择本地游戏</strong>
-				<n-select
-					v-model:value="gameId"
-					:options="gameOptions"
-					placeholder="请选择" />
-			</div>
+            <div class="grid">
+                <strong>{{ t('local.selectGameTitle') }}</strong>
+                <n-select
+                    v-model:value="gameId"
+                    :options="gameOptions"
+                    :placeholder="t('local.selectPlaceholder')" />
+            </div>
 		</n-card>
 
 		<n-card>
-			<div class="grid">
-				<strong>选择参与玩家</strong>
+            <div class="grid">
+                <strong>{{ t('local.selectPlayersTitle') }}</strong>
 				<div class="grid">
 					<div
 						class="flex"
@@ -29,12 +29,12 @@
 				</div>
 				<div class="flex">
 					<div class="space" />
-					<n-button
-						type="primary"
-						:disabled="!canStart"
-						@click="start"
-						>进入游戏界面</n-button
-					>
+                    <n-button
+                        type="primary"
+                        :disabled="!canStart"
+                        @click="start"
+                        >{{ t('local.startButton') }}</n-button
+                    >
 				</div>
 			</div>
 		</n-card>
@@ -48,9 +48,9 @@
 				<GameFlowHint
 					:steps="steps"
 					:index="flowIndex" />
-				<PluginHost>
-					<div class="muted">游戏插件预留空间，供自定义风格与交互</div>
-				</PluginHost>
+                <PluginHost>
+                    <div class="muted">{{ t('local.pluginPlaceholder') }}</div>
+                </PluginHost>
 			</div>
 		</div>
 	</div>
@@ -58,6 +58,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
+import { useI18n } from "vue-i18n";
 import { NCard, NSelect, NCheckbox, NButton } from "naive-ui";
 import ChatWindow from "@/components/ChatWindow.vue";
 import GameFlowHint from "@/components/GameFlowHint.vue";
@@ -65,10 +66,16 @@ import PluginHost from "@/components/PluginHost.vue";
 import { usePlayersStore } from "@/stores/players";
 
 const players = usePlayersStore();
+const { t } = useI18n();
 const games = ref<string[]>([]);
 const gameId = ref("");
 const started = ref(false);
-const steps = ["准备", "发牌/分配角色", "游戏进行", "结算"];
+const steps = computed(() => [
+    t("local.steps.prepare"),
+    t("local.steps.deal"),
+    t("local.steps.play"),
+    t("local.steps.result"),
+]);
 const flowIndex = ref(0);
 
 const allPlayers = computed(() => [...players.humanPlayers, ...players.llmPlayers]);

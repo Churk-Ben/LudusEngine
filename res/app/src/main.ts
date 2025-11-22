@@ -1,19 +1,25 @@
 import { createApp } from "vue";
 import { createPinia } from "pinia";
 import { createI18n } from "vue-i18n";
+import { messages } from "@/i18n";
 import router from "@/router";
 import "@/styles/theme.css";
 import App from "../app.vue";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
+function resolveInitialLocale(): string {
+	const saved = localStorage.getItem("locale");
+	if (saved) return saved;
+	const nav = (navigator.language || "zh-CN").toLowerCase();
+	if (nav.startsWith("zh")) return "zh-CN";
+	return "en";
+}
+
 const i18n = createI18n({
 	legacy: false,
-	locale: "zh-CN",
+	locale: resolveInitialLocale(),
 	fallbackLocale: "en",
-	messages: {
-		"zh-CN": {},
-		en: {},
-	},
+	messages,
 });
 
 createApp(App).use(createPinia()).use(router).use(i18n).component("fa", FontAwesomeIcon).mount("#app");
