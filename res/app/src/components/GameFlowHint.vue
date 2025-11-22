@@ -1,12 +1,12 @@
 <template>
-    <n-card>
-        <div class="flex">
-            <strong>{{ t('flow.title') }}</strong>
-            <div class="space" />
-            <span class="muted">{{ step }}/{{ total }}</span>
-        </div>
-        <div style="margin-top: 8px">{{ hint }}</div>
-    </n-card>
+  <n-card>
+    <div class="flex">
+      <strong>{{ t("flow.title") }}</strong>
+      <div class="space" />
+      <span class="muted">{{ step }}/{{ total }}</span>
+    </div>
+    <div style="margin-top: 8px">{{ hint }}</div>
+  </n-card>
 </template>
 
 <script setup lang="ts">
