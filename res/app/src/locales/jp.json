@@ -1,7 +1,8 @@
 {
   "app": {
     "title": "LudusEngine",
-    "subtitle": "言語ボードゲームプラットフォーム"
+    "subtitle": "言語ボードゲームプラットフォーム",
+    "description": "PythonとVue3を使用した統合言語クラスボードゲームプラットフォーム。ローカルゲームとオンラインゲームをサポート。"
   },
   "sider": {
     "menu": {
@@ -38,6 +39,7 @@
     }
   },
   "local": {
+    "title": "ローカルゲーム",
     "selectGameTitle": "ローカルゲームを選択",
     "selectPlaceholder": "Please select",
     "selectPlayersTitle": "プレイヤーを選択",
@@ -51,6 +53,7 @@
     }
   },
   "online": {
+    "title": "オンラインゲーム",
     "lobbyTitle": "オンラインロビー",
     "notOpen": "まだ利用できません"
   },

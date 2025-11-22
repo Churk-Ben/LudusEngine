@@ -2,27 +2,61 @@
   <div class="container">
     <div class="row g-3">
       <div class="col-12">
-        <n-card style="height: 50vh">
-          <div class="d-flex align-items-center mb-2">
-            <strong>{{ t("app.title") }}</strong>
-          </div>
-          <div class="card-text">
-            {{ t("app.subtitle") }}
-          </div>
-        </n-card>
+        <n-result
+          status="info"
+          :title="t('app.title')"
+          :description="t('app.description')"
+        >
+          <template #icon>
+            <FontAwesomeIcon
+              :icon="faGamepad"
+              size="6x"
+              :style="{ color: '#3BAAFF' }"
+            />
+          </template>
+          <template #footer>
+            <n-space vertical>
+              <n-button @click="$router.push('/local')">
+                {{ t("local.title") }}
+              </n-button>
+              <n-button @click="$router.push('/online')">
+                {{ t("online.title") }}
+              </n-button>
+            </n-space>
+          </template>
+        </n-result>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { onMounted } from "vue";
 import { useI18n } from "vue-i18n";
-import { NCard, NSelect, NInput, NButton } from "naive-ui";
-import { usePlayersStore } from "@/stores/players";
-
-const players = usePlayersStore();
+import {
+  NCard,
+  NSelect,
+  NInput,
+  NButton,
+  NResult,
+  NIcon,
+  NSpace,
+} from "naive-ui";
+import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
+import { faGamepad } from "@fortawesome/free-solid-svg-icons";
 const { t } = useI18n();
 
 onMounted(() => {});
 </script>
+
+<style scoped>
+.container {
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.row {
+  width: 100%;
+}
+</style>

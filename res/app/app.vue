@@ -42,7 +42,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, h } from "vue";
+import { ref, computed, onMounted, h, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute, useRouter, RouterView } from "vue-router";
 import {
@@ -198,6 +198,13 @@ onMounted(() => {
   document.documentElement.lang = locale.value;
   collapsed.value = localStorage.getItem("collapsed") === "true";
 });
+
+watch(
+  () => route.path,
+  (p) => {
+    menuValue.value = p;
+  }
+);
 </script>
 
 <style scoped>

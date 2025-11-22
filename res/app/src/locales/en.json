@@ -1,7 +1,8 @@
 {
   "app": {
     "title": "LudusEngine",
-    "subtitle": "Language Tabletop Platform"
+    "subtitle": "Language Tabletop Platform",
+    "description": "Integrated language class board game platform using Python and Vue3. Supports local and online games."
   },
   "sider": {
     "menu": {
@@ -38,6 +39,7 @@
     }
   },
   "local": {
+    "title": "Local Game",
     "selectGameTitle": "Select Local Game",
     "selectPlaceholder": "Please select",
     "selectPlayersTitle": "Select Players",
@@ -51,6 +53,7 @@
     }
   },
   "online": {
+    "title": "Online Game",
     "lobbyTitle": "Online Lobby",
     "notOpen": "Not available yet"
   },
