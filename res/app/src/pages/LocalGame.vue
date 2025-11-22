@@ -1,56 +1,70 @@
 <template>
-	<div
-		class="grid"
-		style="min-height: 0">
-		<n-card>
-            <div class="grid">
-                <strong>{{ t('local.selectGameTitle') }}</strong>
-                <n-select
-                    v-model:value="gameId"
-                    :options="gameOptions"
-                    :placeholder="t('local.selectPlaceholder')" />
-            </div>
-		</n-card>
+	<div class="container">
+		<div class="row g-3">
+			<div class="col-12">
+				<n-card>
+					<div class="row g-2">
+						<div class="col-12"><strong>{{ t("local.selectGameTitle") }}</strong></div>
+						<div class="col-12">
+							<n-select
+								v-model:value="gameId"
+								:options="gameOptions"
+								:placeholder="t('local.selectPlaceholder')" />
+						</div>
+					</div>
+				</n-card>
+			</div>
 
-		<n-card>
-            <div class="grid">
-                <strong>{{ t('local.selectPlayersTitle') }}</strong>
-				<div class="grid">
-					<div
-						class="flex"
-						v-for="p in allPlayers"
-						:key="p.id">
-						<n-checkbox
-							:value="p.id"
-							v-model:checked="checkedMap[p.id]"
-							>{{ p.name }}</n-checkbox
-						>
+			<div class="col-12">
+				<n-card>
+					<div class="row g-2">
+						<div class="col-12"><strong>{{ t("local.selectPlayersTitle") }}</strong></div>
+						<div class="col-12">
+							<div class="row g-2">
+								<div
+									class="col-12 d-flex align-items-center"
+									v-for="p in allPlayers"
+									:key="p.id">
+									<n-checkbox
+										:value="p.id"
+										v-model:checked="checkedMap[p.id]"
+										>{{ p.name }}</n-checkbox
+										>
+									</div>
+								</div>
+						</div>
+						<div class="col-12 d-flex">
+							<div class="ms-auto">
+								<n-button
+									type="primary"
+									:disabled="!canStart"
+									@click="start"
+									>{{ t("local.startButton") }}</n-button
+								>
+							</div>
+						</div>
+					</div>
+				</n-card>
+			</div>
+
+			<div class="col-12" v-if="started">
+				<div class="row g-3">
+					<div class="col-12 col-md-6">
+						<ChatWindow />
+					</div>
+					<div class="col-12 col-md-6">
+						<div class="row g-3">
+							<div class="col-12">
+								<GameFlowHint :steps="steps" :index="flowIndex" />
+							</div>
+							<div class="col-12">
+								<PluginHost>
+									<div class="text-muted">{{ t("local.pluginPlaceholder") }}</div>
+								</PluginHost>
+							</div>
+						</div>
 					</div>
 				</div>
-				<div class="flex">
-					<div class="space" />
-                    <n-button
-                        type="primary"
-                        :disabled="!canStart"
-                        @click="start"
-                        >{{ t('local.startButton') }}</n-button
-                    >
-				</div>
-			</div>
-		</n-card>
-
-		<div
-			v-if="started"
-			class="grid cols-2"
-			style="min-height: 0">
-			<ChatWindow />
-			<div class="grid">
-				<GameFlowHint
-					:steps="steps"
-					:index="flowIndex" />
-                <PluginHost>
-                    <div class="muted">{{ t('local.pluginPlaceholder') }}</div>
-                </PluginHost>
 			</div>
 		</div>
 	</div>
@@ -71,10 +85,10 @@ const games = ref<string[]>([]);
 const gameId = ref("");
 const started = ref(false);
 const steps = computed(() => [
-    t("local.steps.prepare"),
-    t("local.steps.deal"),
-    t("local.steps.play"),
-    t("local.steps.result"),
+	t("local.steps.prepare"),
+	t("local.steps.deal"),
+	t("local.steps.play"),
+	t("local.steps.result"),
 ]);
 const flowIndex = ref(0);
 

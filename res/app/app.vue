@@ -8,44 +8,7 @@
 					class="app-sider"
 					:width="collapsed ? 64 : 240"
 					bordered>
-					<div class="grid">
-						<div class="flex">
-							<span
-								class="brand"
-								v-if="!collapsed"
-								>{{ $t("app.title") }}</span
-							>
-							<div class="space" />
-							<n-button
-								class="ctrl"
-								quaternary
-								size="small"
-								@click="toggleCollapsed">
-								<fa
-									class="fa-ctrl"
-									:icon="collapsed ? faAnglesRight : faAnglesLeft" />
-							</n-button>
-						</div>
-						<transition name="slide-fade">
-							<div
-								v-if="!collapsed"
-								class="flex ctrl-group">
-								<n-select
-									class="compact-select"
-									v-model:value="locale"
-									:options="localeOptions"
-									@update:value="onLocale" />
-								<n-button
-									class="ctrl"
-									tertiary
-									size="small"
-									@click="toggleTheme">
-									<fa
-										class="fa-ctrl"
-										:icon="themeMode === 'light' ? faMoon : faSun" />
-								</n-button>
-							</div>
-						</transition>
+                    <div class="d-flex flex-column justify-content-between h-100">
 						<n-menu
 							class="app-menu"
 							:options="menuOptions"
@@ -55,6 +18,32 @@
 							:root-indent="16"
 							:collapsed-width="64"
 							@update:value="onMenu" />
+                        <div class="app-ctrl d-flex flex-column align-items-start gap-2">
+							<n-button
+								class="toggle-collapse"
+								quaternary
+								size="small"
+								@click="toggleCollapsed">
+								<fa
+									class="fa-ctrl"
+									:icon="collapsed ? faAnglesRight : faAnglesLeft" />
+							</n-button>
+							<n-button
+								class="toggle-theme"
+								quaternary
+								size="small"
+								@click="toggleTheme">
+								<fa
+									class="fa-ctrl"
+									:icon="themeMode === 'light' ? faMoon : faSun" />
+							</n-button>
+							<n-select
+								class="ctrl"
+								quaternary
+								size="small"
+								:options="localeOptions"
+								@update:value="onLocale" />
+						</div>
 					</div>
 				</n-layout-sider>
 				<n-layout-content
@@ -79,6 +68,7 @@ import {
 	NMenu,
 	NSelect,
 	NButton,
+	NGrid,
 	NIcon,
 	darkTheme,
 } from "naive-ui";
@@ -150,54 +140,29 @@ onMounted(() => {
 <style scoped>
 .app {
 	--motion-duration: 200ms;
-	--motion-easing: cubic-bezier(0.2, 0, 0, 1);
+	--motion-easing: ease;
 	--padding: 12px;
 	--gap: 8px;
 	--icon-size: 16px;
 }
+
 .app-sider {
-	transition: width var(--motion-duration) var(--motion-easing);
+	transition: all var(--motion-duration) var(--motion-easing);
 }
-.grid {
-	display: flex;
-	flex-direction: column;
-	gap: var(--gap);
-	padding: var(--padding);
+
+.app-menu :deep(.n-menu-item-content) {
+	transition: all var(--motion-duration) var(--motion-easing);
 }
-.flex {
-	display: flex;
-	align-items: center;
-	gap: var(--gap);
+
+.app-ctrl {
+	transition: all var(--motion-duration) var(--motion-easing);
 }
-.space {
-	flex: 1;
-}
-.brand {
-	font-size: 14px;
-	font-weight: 600;
-	letter-spacing: 0.2px;
-}
-.compact-select {
-	width: 120px;
-}
-.ctrl .fa-ctrl {
-	font-size: var(--icon-size);
-}
+
 .app-content {
 	padding: var(--padding);
 }
-.slide-fade-enter-active,
-.slide-fade-leave-active {
-	transition: opacity var(--motion-duration) var(--motion-easing),
-		transform var(--motion-duration) var(--motion-easing);
-}
-.slide-fade-enter-from,
-.slide-fade-leave-to {
-	opacity: 0;
-	transform: translateY(-4px);
-}
-.app-menu :deep(.n-menu-item-content) {
-	transition: background-color var(--motion-duration) var(--motion-easing),
-		color var(--motion-duration) var(--motion-easing);
+
+.ctrl .fa-ctrl {
+	font-size: var(--icon-size);
 }
 </style>

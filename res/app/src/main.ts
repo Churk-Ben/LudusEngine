@@ -3,7 +3,9 @@ import { createPinia } from "pinia";
 import { createI18n } from "vue-i18n";
 import { messages } from "@/i18n";
 import router from "@/router";
+import "bootstrap/dist/css/bootstrap.min.css";
 import "@/styles/theme.css";
+import "bootstrap";
 import App from "../app.vue";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 

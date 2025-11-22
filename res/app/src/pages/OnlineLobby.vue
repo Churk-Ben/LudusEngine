@@ -1,12 +1,16 @@
 <template>
-    <n-card>
-        <strong>{{ t('online.lobbyTitle') }}</strong>
-        <div
-            style="margin-top: 8px"
-            class="muted">
-            {{ t('online.notOpen') }}
+    <div class="container">
+        <div class="row g-3">
+            <div class="col-12">
+                <n-card>
+                    <strong>{{ t('online.lobbyTitle') }}</strong>
+                    <div class="text-muted mt-2">
+                        {{ t('online.notOpen') }}
+                    </div>
+                </n-card>
+            </div>
         </div>
-    </n-card>
+    </div>
 </template>
 
 <script setup lang="ts">
