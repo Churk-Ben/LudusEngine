@@ -8,6 +8,7 @@ import "@/styles/root.css";
 import "bootstrap";
 import App from "../app.vue";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
+import { io, Socket } from "socket.io-client";
 
 function resolveInitialLocale(): string {
 	const saved = localStorage.getItem("locale");
@@ -24,4 +25,9 @@ const i18n = createI18n({
 	messages,
 });
 
-createApp(App).use(createPinia()).use(router).use(i18n).component("fa", FontAwesomeIcon).mount("#app");
+const socketUrl = (import.meta as any).env?.VITE_SOCKET_URL || "http://127.0.0.1:5000";
+const socket: Socket = io(socketUrl, { transports: ["websocket"], autoConnect: true });
+
+const app = createApp(App).use(createPinia()).use(router).use(i18n).component("fa", FontAwesomeIcon);
+app.provide("socket", socket);
+app.mount("#app");
