@@ -30,7 +30,7 @@
       "human": "Human Player",
       "llm": "Large Language Model"
     },
-    "empty": "No roles",
+    "empty": "Empty",
     "addRole": "Add Role",
     "modal": {
       "title": "Create Role",

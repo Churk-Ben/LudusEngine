@@ -30,7 +30,7 @@
       "human": "人类玩家",
       "llm": "大语言模型"
     },
-    "empty": "无角色",
+    "empty": "空",
     "addRole": "添加角色",
     "modal": {
       "title": "创建角色",
