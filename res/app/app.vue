@@ -1,5 +1,10 @@
 <template>
-  <n-config-provider :theme="naiveTheme" :inline-theme-disabled="true">
+  <n-config-provider
+    :theme="naiveTheme"
+    :inline-theme-disabled="true"
+    :locale="naiveLocale"
+    :date-locale="naiveDateLocale"
+  >
     <div class="app">
       <n-layout has-sider style="height: 100vh">
         <n-layout-sider
@@ -53,6 +58,12 @@ import {
   NMenu,
   NIcon,
   darkTheme,
+  zhCN,
+  enUS,
+  jaJP,
+  dateZhCN,
+  dateEnUS,
+  dateJaJP,
 } from "naive-ui";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 import {
@@ -168,6 +179,7 @@ const themeMode = ref<"light" | "dark">(prefersDark() ? "dark" : "light");
 const naiveTheme = computed(() =>
   themeMode.value === "dark" ? darkTheme : null
 );
+
 const themeLabel = computed(() =>
   themeMode.value === "light"
     ? t("sider.ctrl.theme.dark")
@@ -186,6 +198,20 @@ const localeOptions = [
   { label: "English", value: "en" },
   { label: "日本語", value: "jp" },
 ];
+
+const naiveLocale = computed(() => {
+  if (locale.value === "zh-CN") return zhCN;
+  if (locale.value === "en") return enUS;
+  if (locale.value === "jp") return jaJP;
+  return null;
+});
+
+const naiveDateLocale = computed(() => {
+  if (locale.value === "zh-CN") return dateZhCN;
+  if (locale.value === "en") return dateEnUS;
+  if (locale.value === "jp") return dateJaJP;
+  return null;
+});
 
 function onLocale(v: string) {
   locale.value = v;

@@ -2,13 +2,14 @@
   <div class="container">
     <div class="row g-3">
       <div class="col-6">
-        <n-card :title="t('role.manager.title')">
+        <n-card embedded :title="t('role.manager.title')">
           <template #header-extra>
             <n-button type="primary" :disabled="!canStart" @click="start">
               {{ t("local.startButton") }}
             </n-button>
           </template>
-          <div class="d-flex flex-column">
+
+          <div class="container flex-column mb-4">
             <section class="row my-2">
               <div class="col-12 mb-2">
                 <strong>{{ t("local.selectGameTitle") }}</strong>

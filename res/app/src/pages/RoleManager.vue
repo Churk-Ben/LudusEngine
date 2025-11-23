@@ -2,69 +2,69 @@
   <div class="container">
     <div class="row g-3">
       <div class="col-6">
-        <n-card :title="t('role.manager.title')">
+        <n-card embedded :title="t('role.manager.title')">
           <template #header-extra>
             <n-button type="primary" @click="openCreate">
               {{ t("role.addRole") }}
             </n-button>
           </template>
-          <div class="d-flex flex-column">
-            <section class="my-2">
-              <strong class="d-block mb-2">
-                {{ t("role.sections.human") }}
-              </strong>
-              <div v-if="players.humanPlayers.length === 0">
-                <n-card
-                  embedded
-                  closable
-                  size="small"
-                  :title="t('role.empty')"
-                  @close="openCreate"
-                />
+          <div class="container flex-column mb-4">
+            <section class="row my-2">
+              <div class="col-12 mb-2">
+                <strong>{{ t("role.sections.human") }}</strong>
               </div>
-              <div v-else v-for="p in players.humanPlayers" :key="p.id">
-                <n-card
-                  embedded
-                  closable
-                  class="mb-1"
-                  size="small"
-                  :title="p.name"
-                  @close="players.removePlayer(p.id)"
-                />
+              <div class="col-12">
+                <div v-if="players.humanPlayers.length === 0">
+                  <n-card
+                    closable
+                    size="small"
+                    :title="t('role.empty')"
+                    @close="openCreate"
+                  />
+                </div>
+                <div v-else v-for="p in players.humanPlayers" :key="p.id">
+                  <n-card
+                    closable
+                    class="mb-1"
+                    size="small"
+                    :title="p.name"
+                    @close="players.removePlayer(p.id)"
+                  />
+                </div>
               </div>
             </section>
 
-            <section class="my-2">
-              <strong class="d-block mb-2">
-                {{ t("role.sections.llm") }}
-              </strong>
-              <div v-if="players.llmPlayers.length === 0">
-                <n-card
-                  embedded
-                  closable
-                  size="small"
-                  :title="t('role.empty')"
-                  @close="openCreate"
-                />
+            <section class="row my-2">
+              <div class="col-12 mb-2">
+                <strong>{{ t("role.sections.llm") }}</strong>
               </div>
-              <div v-else v-for="p in players.llmPlayers" :key="p.id">
-                <n-card
-                  embedded
-                  closable
-                  class="mb-1"
-                  size="small"
-                  :title="p.name"
-                  @close="players.removePlayer(p.id)"
-                >
-                  <template v-if="isLocal(p)">
-                    {{ t("role.modal.type.local") }} -
-                    {{ p.model || t("role.common.notSet") }}
-                  </template>
-                  <template v-else>
-                    {{ providerName(p.providerId) }} -
-                    {{ p.model || t("role.common.notSet") }}
-                  </template>
-                </n-card>
+              <div class="col-12">
+                <div v-if="players.llmPlayers.length === 0">
+                  <n-card
+                    closable
+                    size="small"
+                    :title="t('role.empty')"
+                    @close="openCreate"
+                  />
+                </div>
+                <div v-else v-for="p in players.llmPlayers" :key="p.id">
+                  <n-card
+                    closable
+                    class="mb-1"
+                    size="small"
+                    :title="p.name"
+                    @close="players.removePlayer(p.id)"
+                  >
+                    <template v-if="isLocal(p)">
+                      {{ t("role.modal.type.local") }} -
+                      {{ p.model || t("role.common.notSet") }}
+                    </template>
+                    <template v-else>
+                      {{ providerName(p.providerId) }} -
+                      {{ p.model || t("role.common.notSet") }}
+                    </template>
+                  </n-card>
+                </div>
               </div>
             </section>
           </div>
