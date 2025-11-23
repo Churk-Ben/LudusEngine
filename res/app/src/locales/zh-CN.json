@@ -44,7 +44,7 @@
         "roleName": "角色名称",
         "provider": "提供商",
         "modelName": "模型名称",
-        "api": "API",
+        "api": "API KEY",
         "localPath": "模型文件路径"
       },
       "actions": {

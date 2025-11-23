@@ -44,7 +44,7 @@
         "roleName": "ロール名",
         "provider": "プロバイダー",
         "modelName": "モデル名",
-        "api": "API",
+        "api": "API KEY",
         "localPath": "モデルファイルのパス"
       },
       "actions": {
