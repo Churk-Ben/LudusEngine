@@ -26,7 +26,7 @@ const i18n = createI18n({
 });
 
 const socketUrl = (import.meta as any).env?.VITE_SOCKET_URL || "http://127.0.0.1:5000";
-const socket: Socket = io(socketUrl, { transports: ["websocket"], autoConnect: true });
+const socket: Socket = io(socketUrl, { autoConnect: true });
 
 const app = createApp(App).use(createPinia()).use(router).use(i18n).component("fa", FontAwesomeIcon);
 app.provide("socket", socket);

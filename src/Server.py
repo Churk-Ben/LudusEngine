@@ -1,5 +1,6 @@
 from flask import Flask, send_from_directory, jsonify, request
 from flask_cors import CORS
+from flask_socketio import SocketIO, emit
 from pathlib import Path
 import os
 from .Logger import get_logger
@@ -12,6 +13,7 @@ log = get_logger("LudusServer")
 
 app = Flask(__name__, static_folder=str(STATIC_DIR), static_url_path="/")
 CORS(app)
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading")
 
 providers = [
     {"id": "openai", "name": "OpenAI", "kind": "api"},
@@ -88,5 +90,13 @@ def serve_static(path):
         return send_from_directory(app.static_folder, "index.html")
     return jsonify({"ok": True})
 
+@socketio.on("connect")
+def on_connect():
+    emit("server:ready", {"ok": True})
+
+@socketio.on("client:ping")
+def on_ping(data=None):
+    emit("server:pong", {"ok": True, "echo": data})
+
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    socketio.run(app, host="0.0.0.0", port=5000)
