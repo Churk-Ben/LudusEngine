@@ -69,25 +69,22 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, h } from "vue";
 import { useI18n } from "vue-i18n";
-import { NCard, NSelect, NCheckbox, NButton, NTransfer, NTree } from "naive-ui";
+import { NCard, NSelect, NButton, NTransfer, NTree } from "naive-ui";
 import type { TransferRenderSourceList, TreeOption } from "naive-ui";
+import { usePlayersStore } from "@/stores/players";
+
+// 游戏组件 - 这将是允许自定义的重点
 import ChatWindow from "@/components/ChatWindow.vue";
 import GameFlowHint from "@/components/GameFlowHint.vue";
 import PluginHost from "@/components/PluginHost.vue";
-import { usePlayersStore } from "@/stores/players";
 
-const players = usePlayersStore();
 const { t } = useI18n();
+const started = ref(false);
 const games = ref<string[]>([]);
 const gameId = ref("");
-const started = ref(false);
-const steps = computed(() => [
-  t("local.steps.prepare"),
-  t("local.steps.deal"),
-  t("local.steps.play"),
-  t("local.steps.result"),
-]);
-const flowIndex = ref(0);
+
+// 配置部分
+const players = usePlayersStore();
 
 const providerMap = computed(() => {
   const m: Record<string, { kind: "api" | "local" }> = {};
@@ -173,6 +170,19 @@ const gameOptions = computed(() =>
   games.value.map((g) => ({ label: g, value: g }))
 );
 
+
+// 步骤
+const steps = computed(() => [
+  t("local.steps.prepare"),
+  t("local.steps.deal"),
+  t("local.steps.play"),
+  t("local.steps.result"),
+]);
+
+// 流程?
+const flowIndex = ref(0);
+
+// 加载
 async function loadGames() {
   const r = await fetch("/api/games");
   if (r.ok) games.value = await r.json();
