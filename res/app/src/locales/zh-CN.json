@@ -75,6 +75,7 @@
   },
   "local": {
     "title": "本地游戏",
+    "configTitle": "配置本地游戏",
     "selectGameTitle": "选择本地游戏",
     "selectPlaceholder": "请选择",
     "selectPlayersTitle": "选择参与玩家",

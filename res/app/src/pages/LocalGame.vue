@@ -1,8 +1,8 @@
 <template>
   <div class="container">
     <div class="row g-3">
-      <div class="col-6">
-        <n-card embedded :title="t('role.manager.title')">
+      <div class="col-12 col-md-8">
+        <n-card embedded :title="t('local.configTitle')">
           <template #header-extra>
             <n-button type="primary" :disabled="!canStart" @click="start">
               {{ t("local.startButton") }}
@@ -94,7 +94,9 @@ const providerMap = computed(() => {
   for (const p of players.providers) m[p.id] = { kind: p.kind } as any;
   return m;
 });
+
 type Option = { label: string; value: string; children?: Option[] };
+
 const treeData = computed<Option[]>(() => {
   const humans: Option[] = players.humanPlayers.map((p) => ({
     label: p.name,
@@ -124,6 +126,7 @@ const treeData = computed<Option[]>(() => {
     },
   ];
 });
+
 function flattenLeaves(list?: Option[]): { label: string; value: string }[] {
   const result: { label: string; value: string }[] = [];
   function walk(items: Option[] = []) {
@@ -136,7 +139,9 @@ function flattenLeaves(list?: Option[]): { label: string; value: string }[] {
   if (!result.length) return [{ label: t("role.empty"), value: "__empty" }];
   return result;
 }
+
 const transferOptions = computed(() => flattenLeaves(treeData.value));
+
 const renderSourceList: TransferRenderSourceList = ({ onCheck, pattern }) => {
   return h(NTree, {
     style: "margin: 0 4px;",
@@ -157,7 +162,9 @@ const renderSourceList: TransferRenderSourceList = ({ onCheck, pattern }) => {
     },
   });
 };
+
 const selectedPlayerIds = ref<string[]>([]);
+
 const canStart = computed(
   () => !!gameId.value && selectedPlayerIds.value.length >= 2
 );

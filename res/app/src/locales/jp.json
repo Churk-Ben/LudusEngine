@@ -75,6 +75,7 @@
   },
   "local": {
     "title": "ローカルゲーム",
+    "configTitle": "ローカルゲームの設定",
     "selectGameTitle": "ローカルゲームを選択",
     "selectPlaceholder": "Please select",
     "selectPlayersTitle": "プレイヤーを選択",

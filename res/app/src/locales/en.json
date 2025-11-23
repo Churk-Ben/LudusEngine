@@ -75,6 +75,7 @@
   },
   "local": {
     "title": "Local Game",
+    "configTitle": "Local Game Configuration",
     "selectGameTitle": "Select Local Game",
     "selectPlaceholder": "Please select",
     "selectPlayersTitle": "Select Players",
