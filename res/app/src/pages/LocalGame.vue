@@ -1,7 +1,7 @@
 <template>
   <div class="container">
     <div class="row g-3">
-      <div class="col-12 col-md-8">
+      <div class="col-12 col-md-8" v-if="!started">
         <n-card embedded :title="t('local.configTitle')">
           <template #header-extra>
             <n-button type="primary" :disabled="!canStart" @click="start">
@@ -185,18 +185,3 @@ function start() {
 
 onMounted(() => loadGames());
 </script>
-
-<style scoped>
-.container {
-  height: 100%;
-  display: flex;
-  align-items: center;
-}
-
-.row {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-</style>

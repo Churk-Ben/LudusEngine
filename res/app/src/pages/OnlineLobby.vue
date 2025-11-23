@@ -31,16 +31,3 @@ import { useI18n } from "vue-i18n";
 const { t } = useI18n();
 </script>
 
-<style scoped>
-.container {
-  height: 100%;
-  display: flex;
-  align-items: center;
-}
-
-.row {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-}
-</style>

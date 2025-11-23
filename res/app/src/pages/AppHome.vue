@@ -51,17 +51,3 @@ const { t } = useI18n();
 
 onMounted(() => {});
 </script>
-
-<style scoped>
-.container {
-  height: 100%;
-  display: flex;
-  align-items: center;
-}
-
-.row {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-}
-</style>

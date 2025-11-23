@@ -16,10 +16,8 @@
               <div class="col-12">
                 <div v-if="players.humanPlayers.length === 0">
                   <n-card
-                    closable
                     size="small"
                     :title="t('role.empty')"
-                    @close="openCreate"
                   />
                 </div>
                 <div v-else v-for="p in players.humanPlayers" :key="p.id">
@@ -41,10 +39,8 @@
               <div class="col-12">
                 <div v-if="players.llmPlayers.length === 0">
                   <n-card
-                    closable
                     size="small"
                     :title="t('role.empty')"
-                    @close="openCreate"
                   />
                 </div>
                 <div v-else v-for="p in players.llmPlayers" :key="p.id">
@@ -276,17 +272,3 @@ function doCreate() {
 
 onMounted(() => players.loadProviders());
 </script>
-
-<style scoped>
-.container {
-  height: 100%;
-  display: flex;
-  align-items: center;
-}
-
-.row {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-}
-</style>
