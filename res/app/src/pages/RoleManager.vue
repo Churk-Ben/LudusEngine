@@ -56,9 +56,14 @@
                   :title="p.name"
                   @close="players.removePlayer(p.id)"
                 >
-                  {{ providerName(p.providerId) }} -
-                  {{ p.model || t("role.common.notSet") }}
-                  <!-- <template v-if="p.api">· {{ p.api }}</template> -->
+                  <template v-if="isLocal(p)">
+                    {{ t("role.modal.type.local") }} -
+                    {{ p.model || t("role.common.notSet") }}
+                  </template>
+                  <template v-else>
+                    {{ providerName(p.providerId) }} -
+                    {{ p.model || t("role.common.notSet") }}
+                  </template>
                 </n-card>
               </div>
             </section>
@@ -117,8 +122,9 @@
                 </div>
                 <div class="col-12">
                   <n-input
-                    v-model:value="apiBase"
+                    v-model:value="apiKey"
                     :placeholder="t('role.modal.fields.api')"
+                    type="password"
                   />
                 </div>
                 <div class="col-12">
@@ -179,35 +185,43 @@ import { usePlayersStore } from "@/stores/players";
 const players = usePlayersStore();
 const { t } = useI18n();
 
+// 模态框
 const showCreate = ref(false);
 const createType = ref<"human" | "online" | "local">("human");
 const roleName = ref("");
 const providerId = ref("");
 const modelName = ref("");
-const apiBase = ref("");
+const apiKey = ref("");
 const modelPath = ref("");
 
 const providers = computed(() => players.providers);
 const providerOptions = computed(() =>
   providers.value.map((p) => ({ label: p.name, value: p.id }))
 );
+
 function providerName(id: string) {
   return providers.value.find((x) => x.id === id)?.name || "";
+}
+
+function isLocal(p: any) {
+  return providers.value.find((x) => x.id === p.providerId)?.kind === "local";
 }
 
 function openCreate() {
   resetForm();
   showCreate.value = true;
 }
+
 function closeCreate() {
   showCreate.value = false;
 }
+
 function resetForm() {
   createType.value = "human";
   roleName.value = "";
   providerId.value = "";
   modelName.value = "";
-  apiBase.value = "";
+  apiKey.value = "";
   modelPath.value = "";
 }
 
@@ -220,12 +234,12 @@ const canCreate = computed(() => {
       !!roleName.value.trim() &&
       !!providerId.value &&
       !!modelName.value.trim() &&
-      !!apiBase.value.trim()
+      !!apiKey.value.trim()
     );
   }
   if (createType.value === "local") {
     const path = modelPath.value.trim();
-    const isAbs = /^[a-zA-Z]:\\/.test(path) || path.startsWith("/");
+    const isAbs = /^[a-zA-Z]:[\\/]/.test(path) || path.startsWith("/");
     return !!roleName.value.trim() && isAbs;
   }
   return false;
@@ -243,7 +257,7 @@ function doCreate() {
       name: roleName.value.trim(),
       providerId: providerId.value,
       model: modelName.value.trim(),
-      api: apiBase.value.trim(),
+      apiKey: apiKey.value.trim(),
     });
     closeCreate();
     return;

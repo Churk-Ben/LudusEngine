@@ -10,8 +10,9 @@
           >
             <template #icon>
               <FontAwesomeIcon
+                size="5x"
+                class="my-1"
                 :icon="faGamepad"
-                size="6x"
                 :style="{ color: '#3BAAFF' }"
               />
             </template>
@@ -20,7 +21,7 @@
                 <n-button @click="$router.push('/local')">
                   {{ t("local.title") }}
                 </n-button>
-                <n-button @click="$router.push('/online')">
+                <n-button @click="$router.push('/online')" disabled>
                   {{ t("online.title") }}
                 </n-button>
               </n-space>

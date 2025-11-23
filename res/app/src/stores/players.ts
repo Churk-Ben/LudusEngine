@@ -14,7 +14,7 @@ export interface LLMPlayer {
 	name: string;
 	providerId: string;
 	model?: string;
-	api?: string;
+	apiKey?: string;
 }
 
 export interface HumanPlayer {
