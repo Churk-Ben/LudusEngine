@@ -98,12 +98,6 @@ const lastPong = ref<any>(null);
 // 配置部分
 const players = usePlayersStore();
 
-const providerMap = computed(() => {
-  const m: Record<string, { kind: "api" | "local" }> = {};
-  for (const p of players.providers) m[p.id] = { kind: p.kind } as any;
-  return m;
-});
-
 type Option = { label: string; value: string; children?: Option[] };
 
 const treeData = computed<Option[]>(() => {
@@ -111,12 +105,14 @@ const treeData = computed<Option[]>(() => {
     label: p.name,
     value: p.id,
   }));
-  const onlines: Option[] = players.llmPlayers
-    .filter((p) => providerMap.value[p.providerId]?.kind === "api")
-    .map((p) => ({ label: p.name, value: p.id }));
-  const locals: Option[] = players.llmPlayers
-    .filter((p) => providerMap.value[p.providerId]?.kind === "local")
-    .map((p) => ({ label: p.name, value: p.id }));
+  const onlines: Option[] = players.onlinePlayers.map((p) => ({
+    label: p.name,
+    value: p.id,
+  }));
+  const locals: Option[] = players.localPlayers.map((p) => ({
+    label: p.modelName,
+    value: p.id,
+  }));
   return [
     {
       label: t("role.modal.type.human"),

@@ -45,7 +45,9 @@
         "provider": "Provider",
         "modelName": "Model Name",
         "api": "API KEY",
-        "localPath": "Model File Path"
+        "localPath": "Model File Path",
+        "prefixPrompt": "Prefix Prompt (Long Text)",
+        "parameters": "Startup Parameters"
       },
       "actions": {
         "create": "Create",

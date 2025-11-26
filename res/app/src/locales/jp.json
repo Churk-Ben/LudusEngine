@@ -45,7 +45,9 @@
         "provider": "プロバイダー",
         "modelName": "モデル名",
         "api": "API KEY",
-        "localPath": "モデルファイルのパス"
+        "localPath": "モデルファイルのパス",
+        "prefixPrompt": "プレフィックスプロンプト (長文)",
+        "parameters": "起動パラメータ"
       },
       "actions": {
         "create": "作成",

@@ -15,10 +15,7 @@
               </div>
               <div class="col-12">
                 <div v-if="players.humanPlayers.length === 0">
-                  <n-card
-                    size="small"
-                    :title="t('role.empty')"
-                  />
+                  <n-card size="small" :title="t('role.empty')" />
                 </div>
                 <div v-else v-for="p in players.humanPlayers" :key="p.id">
                   <n-card
@@ -27,23 +24,22 @@
                     size="small"
                     :title="p.name"
                     @close="players.removePlayer(p.id)"
-                  />
+                  >
+                    <div class="text-truncate">{{ p.prefixPrompt }}</div>
+                  </n-card>
                 </div>
               </div>
             </section>
 
             <section class="row my-2">
               <div class="col-12 mb-2">
-                <strong>{{ t("role.sections.llm") }}</strong>
+                <strong>{{ t("role.modal.type.online") }}</strong>
               </div>
               <div class="col-12">
-                <div v-if="players.llmPlayers.length === 0">
-                  <n-card
-                    size="small"
-                    :title="t('role.empty')"
-                  />
+                <div v-if="players.onlinePlayers.length === 0">
+                  <n-card size="small" :title="t('role.empty')" />
                 </div>
-                <div v-else v-for="p in players.llmPlayers" :key="p.id">
+                <div v-else v-for="p in players.onlinePlayers" :key="p.id">
                   <n-card
                     closable
                     class="mb-1"
@@ -51,14 +47,29 @@
                     :title="p.name"
                     @close="players.removePlayer(p.id)"
                   >
-                    <template v-if="isLocal(p)">
-                      {{ t("role.modal.type.local") }} -
-                      {{ p.model || t("role.common.notSet") }}
-                    </template>
-                    <template v-else>
-                      {{ providerName(p.providerId) }} -
-                      {{ p.model || t("role.common.notSet") }}
-                    </template>
+                    {{ providerName(p.providerId) }} - {{ p.model }}
+                  </n-card>
+                </div>
+              </div>
+            </section>
+
+            <section class="row my-2">
+              <div class="col-12 mb-2">
+                <strong>{{ t("role.modal.type.local") }}</strong>
+              </div>
+              <div class="col-12">
+                <div v-if="players.localPlayers.length === 0">
+                  <n-card size="small" :title="t('role.empty')" />
+                </div>
+                <div v-else v-for="p in players.localPlayers" :key="p.id">
+                  <n-card
+                    closable
+                    class="mb-1"
+                    size="small"
+                    :title="p.modelName"
+                    @close="players.removePlayer(p.id)"
+                  >
+                    {{ p.modelPath }}
                   </n-card>
                 </div>
               </div>
@@ -95,12 +106,22 @@
                 </n-flex>
               </div>
 
-              <div class="col-12" v-if="createType === 'human'">
-                <n-input
-                  v-model:value="roleName"
-                  :placeholder="t('role.modal.fields.roleName')"
-                />
-              </div>
+              <template v-if="createType === 'human'">
+                <div class="col-12">
+                  <n-input
+                    v-model:value="roleName"
+                    :placeholder="t('role.modal.fields.roleName')"
+                  />
+                </div>
+                <div class="col-12">
+                  <n-input
+                    v-model:value="prefixPrompt"
+                    type="textarea"
+                    :placeholder="t('role.modal.fields.prefixPrompt')"
+                    rows="6"
+                  />
+                </div>
+              </template>
 
               <template v-if="createType === 'online'">
                 <div class="col-12">
@@ -134,14 +155,20 @@
               <template v-if="createType === 'local'">
                 <div class="col-12">
                   <n-input
+                    v-model:value="roleName"
+                    :placeholder="t('role.modal.fields.modelName')"
+                  />
+                </div>
+                <div class="col-12">
+                  <n-input
                     v-model:value="modelPath"
                     :placeholder="t('role.modal.fields.localPath')"
                   />
                 </div>
                 <div class="col-12">
                   <n-input
-                    v-model:value="roleName"
-                    :placeholder="t('role.modal.fields.roleName')"
+                    v-model:value="parameters"
+                    :placeholder="t('role.modal.fields.parameters')"
                   />
                 </div>
               </template>
@@ -189,6 +216,8 @@ const providerId = ref("");
 const modelName = ref("");
 const apiKey = ref("");
 const modelPath = ref("");
+const prefixPrompt = ref("");
+const parameters = ref("");
 
 const providers = computed(() => players.providers);
 const providerOptions = computed(() =>
@@ -196,11 +225,7 @@ const providerOptions = computed(() =>
 );
 
 function providerName(id: string) {
-  return providers.value.find((x) => x.id === id)?.name || "";
-}
-
-function isLocal(p: any) {
-  return providers.value.find((x) => x.id === p.providerId)?.kind === "local";
+  return providers.value.find((x) => x.id === id)?.name || id;
 }
 
 function openCreate() {
@@ -219,6 +244,8 @@ function resetForm() {
   modelName.value = "";
   apiKey.value = "";
   modelPath.value = "";
+  prefixPrompt.value = "";
+  parameters.value = "";
 }
 
 const canCreate = computed(() => {
@@ -244,12 +271,15 @@ const canCreate = computed(() => {
 function doCreate() {
   if (createType.value === "human") {
     if (players.humanPlayers.length > 0) return;
-    players.addHuman({ name: roleName.value.trim() });
+    players.addHuman({
+      name: roleName.value.trim(),
+      prefixPrompt: prefixPrompt.value,
+    });
     closeCreate();
     return;
   }
   if (createType.value === "online") {
-    players.addLLM({
+    players.addOnline({
       name: roleName.value.trim(),
       providerId: providerId.value,
       model: modelName.value.trim(),
@@ -259,12 +289,10 @@ function doCreate() {
     return;
   }
   if (createType.value === "local") {
-    const localProvider =
-      providers.value.find((p) => p.kind === "local")?.id || "local";
-    players.addLLM({
-      name: roleName.value.trim(),
-      providerId: localProvider,
-      model: modelPath.value.trim(),
+    players.addLocal({
+      modelName: roleName.value.trim(),
+      modelPath: modelPath.value.trim(),
+      parameters: parameters.value.trim(),
     });
     closeCreate();
   }
