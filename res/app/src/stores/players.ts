@@ -39,7 +39,7 @@ export const usePlayersStore = defineStore("players", {
 	}),
 	actions: {
 		async loadProviders() {
-			const r = await fetch("/api/providers");
+			const r = await fetch("/providers");
 			if (r.ok) this.providers = await r.json();
 		},
 		addHuman(p: Omit<HumanPlayer, "id">) {

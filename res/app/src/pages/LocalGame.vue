@@ -1,11 +1,6 @@
 <template>
   <div class="container">
     <div class="row g-3">
-      <div class="col-12">
-        <div class="text-muted" style="font-size: 12px;">
-          {{ socketConnected ? "Socket已连接" : "Socket未连接" }}
-        </div>
-      </div>
       <div class="col-12 col-md-8" v-if="!started">
         <n-card embedded :title="t('local.configTitle')">
           <template #header-extra>
@@ -77,23 +72,22 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, h, inject } from "vue";
 import { useI18n } from "vue-i18n";
-import { NCard, NSelect, NButton, NTransfer, NTree, NResult, NSpace } from "naive-ui";
+import {
+  NCard,
+  NSelect,
+  NButton,
+  NTransfer,
+  NTree,
+  NResult,
+  NSpace,
+} from "naive-ui";
 import type { TransferRenderSourceList, TreeOption } from "naive-ui";
 import { usePlayersStore } from "@/stores/players";
-import type { Socket } from "socket.io-client";
-
-// 游戏组件 - 这将是允许自定义的重点
-// import ChatWindow from "@/components/ChatWindow.vue";
-// import GameFlowHint from "@/components/GameFlowHint.vue";
-// import PluginHost from "@/components/PluginHost.vue";
 
 const { t } = useI18n();
 const started = ref(false);
 const games = ref<string[]>([]);
 const gameId = ref("");
-const socket = inject<Socket>("socket");
-const socketConnected = ref(false);
-const lastPong = ref<any>(null);
 
 // 配置部分
 const players = usePlayersStore();
@@ -178,7 +172,6 @@ const gameOptions = computed(() =>
   games.value.map((g) => ({ label: g, value: g }))
 );
 
-
 // 步骤
 const steps = computed(() => [
   t("local.steps.prepare"),
@@ -192,42 +185,16 @@ const flowIndex = ref(0);
 
 // 加载
 async function loadGames() {
-  const r = await fetch("/api/games");
+  const r = await fetch("/games");
   if (r.ok) games.value = await r.json();
 }
 
 function start() {
   started.value = true;
   flowIndex.value = 0;
-  if (socket) {
-    socket.emit("client:ping", { ts: Date.now() });
-  }
 }
 
 onMounted(() => {
   loadGames();
-  if (socket) {
-    socket.on("connect", () => {
-      socketConnected.value = true;
-    });
-    socket.on("disconnect", () => {
-      socketConnected.value = false;
-    });
-    socket.on("server:ready", () => {
-      socketConnected.value = true;
-    });
-    socket.on("server:pong", (data: any) => {
-      lastPong.value = data;
-    });
-  }
-});
-
-onUnmounted(() => {
-  if (socket) {
-    socket.off("connect");
-    socket.off("disconnect");
-    socket.off("server:ready");
-    socket.off("server:pong");
-  }
 });
 </script>

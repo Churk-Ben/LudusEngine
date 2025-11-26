@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 
+
 class Game(ABC):
     @abstractmethod
     def set(self):
@@ -8,6 +9,7 @@ class Game(ABC):
     @abstractmethod
     def run(self):
         pass
+
 
 class Player(ABC):
     @abstractmethod

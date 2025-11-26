@@ -25,8 +25,17 @@ const i18n = createI18n({
 	messages,
 });
 
-const socketUrl = (import.meta as any).env?.VITE_SOCKET_URL || "http://127.0.0.1:5000";
-const socket: Socket = io(socketUrl, { autoConnect: true });
+const envAny = (import.meta as any).env || {};
+const isDev = !!envAny?.DEV;
+const socketUrl = envAny?.VITE_SOCKET_URL || (isDev ? "http://127.0.0.1:5000" : window.location.origin || "http://127.0.0.1:5000");
+const socket: Socket = io(socketUrl, {
+	autoConnect: true,
+	transports: ["websocket", "polling"],
+	reconnection: true,
+	reconnectionAttempts: 10,
+	reconnectionDelay: 1000,
+	path: "/socket.io",
+});
 
 const app = createApp(App).use(createPinia()).use(router).use(i18n).component("fa", FontAwesomeIcon);
 app.provide("socket", socket);
