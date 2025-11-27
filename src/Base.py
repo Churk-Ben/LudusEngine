@@ -1,4 +1,7 @@
 from abc import ABC, abstractmethod
+from pathlib import Path
+
+BASE = Path(__file__).resolve().parent.parent
 
 
 class Game(ABC):

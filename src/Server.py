@@ -146,11 +146,14 @@ def serve_static(path):
 
 
 @socketio.on("connect")
+@log.decorate.info("客户端连接函数")
 def on_connect():
+    log.info("客户端连接")
     emit("server:ready", {"ok": True})
 
 
 @socketio.on("client:ping")
+@log.decorate.info("客户端发送 ping 消息, 参数 data={data}")
 def on_ping(data=None):
     emit("server:pong", {"ok": True, "echo": data})
 
