@@ -34,20 +34,9 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from "vue";
 import { useI18n } from "vue-i18n";
-import {
-  NCard,
-  NSelect,
-  NInput,
-  NButton,
-  NResult,
-  NIcon,
-  NSpace,
-} from "naive-ui";
+import { NCard, NButton, NResult, NSpace } from "naive-ui";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 import { faGamepad } from "@fortawesome/free-solid-svg-icons";
 const { t } = useI18n();
-
-onMounted(() => {});
 </script>

@@ -14,17 +14,18 @@
                 <strong>{{ t("role.sections.human") }}</strong>
               </div>
               <div class="col-12">
-                <div v-if="players.humanPlayers.length === 0">
+                <div v-if="players.human.length === 0">
                   <n-card size="small" :title="t('role.empty')" />
                 </div>
-                <div v-else v-for="p in players.humanPlayers" :key="p.id">
+                <div v-else v-for="p in players.human" :key="p.id">
                   <n-card
                     closable
                     class="mb-1"
                     size="small"
                     :title="p.name"
-                    @close="players.removePlayer(p.id)"
+                    @close="removePlayer(p.id)"
                   >
+                    >
                     <div class="text-truncate">{{ p.prefixPrompt }}</div>
                   </n-card>
                 </div>
@@ -36,16 +37,16 @@
                 <strong>{{ t("role.modal.type.online") }}</strong>
               </div>
               <div class="col-12">
-                <div v-if="players.onlinePlayers.length === 0">
+                <div v-if="players.online.length === 0">
                   <n-card size="small" :title="t('role.empty')" />
                 </div>
-                <div v-else v-for="p in players.onlinePlayers" :key="p.id">
+                <div v-else v-for="p in players.online" :key="p.id">
                   <n-card
                     closable
                     class="mb-1"
                     size="small"
                     :title="p.name"
-                    @close="players.removePlayer(p.id)"
+                    @close="removePlayer(p.id)"
                   >
                     {{ providerName(p.providerId) }} - {{ p.model }}
                   </n-card>
@@ -58,16 +59,16 @@
                 <strong>{{ t("role.modal.type.local") }}</strong>
               </div>
               <div class="col-12">
-                <div v-if="players.localPlayers.length === 0">
+                <div v-if="players.local.length === 0">
                   <n-card size="small" :title="t('role.empty')" />
                 </div>
-                <div v-else v-for="p in players.localPlayers" :key="p.id">
+                <div v-else v-for="p in players.local" :key="p.id">
                   <n-card
                     closable
                     class="mb-1"
                     size="small"
                     :title="p.name"
-                    @close="players.removePlayer(p.id)"
+                    @close="removePlayer(p.id)"
                   >
                     {{ p.modelPath }}
                   </n-card>
@@ -156,7 +157,7 @@
                 <div class="col-12">
                   <n-input
                     v-model:value="roleName"
-                    :placeholder="t('role.modal.fields.modelName')"
+                    :placeholder="t('role.modal.fields.name')"
                   />
                 </div>
                 <div class="col-12">
@@ -203,10 +204,17 @@ import {
   NInput,
   NFlex,
 } from "naive-ui";
-import { usePlayersStore } from "@/stores/players";
+import * as playerService from "@/services/players";
 
-const players = usePlayersStore();
 const { t } = useI18n();
+const debugMode = true;
+
+const players = ref<playerService.AllPlayers>({
+  human: [],
+  online: [],
+  local: [],
+});
+const providers = ref<playerService.LLMProvider[]>([]);
 
 // 模态框
 const showCreate = ref(false);
@@ -219,11 +227,9 @@ const modelPath = ref("");
 const prefixPrompt = ref("");
 const parameters = ref("");
 
-const providers = computed(() => players.providers);
 const providerOptions = computed(() =>
   providers.value.map((p) => ({ label: p.name, value: p.id }))
 );
-
 function providerName(id: string) {
   return providers.value.find((x) => x.id === id)?.name || id;
 }
@@ -238,7 +244,7 @@ function closeCreate() {
 }
 
 function resetForm() {
-  if (players.humanPlayers.length === 0) {
+  if (players.value.human.length === 0) {
     createType.value = "human";
   } else {
     createType.value = "online";
@@ -254,60 +260,64 @@ function resetForm() {
 
 const canCreate = computed(() => {
   if (createType.value === "human") {
-    return !!roleName.value.trim() && players.humanPlayers.length === 0;
+    return !!roleName.value.trim() || debugMode === true;
   }
   if (createType.value === "online") {
     return (
-      !!roleName.value.trim() &&
-      !!providerId.value &&
-      !!modelName.value.trim() &&
-      !!apiKey.value.trim()
+      (!!roleName.value.trim() &&
+        !!providerId.value &&
+        !!modelName.value.trim() &&
+        !!apiKey.value.trim()) ||
+      debugMode === true
     );
   }
   if (createType.value === "local") {
     const path = modelPath.value.trim();
     const isAbs = /^[a-zA-Z]:[\\/]/.test(path) || path.startsWith("/");
-    return !!roleName.value.trim() && isAbs;
+    return (!!roleName.value.trim() && isAbs) || debugMode === true;
   }
   return false;
 });
 
-function doCreate() {
+async function removePlayer(id: string) {
+  players.value.human = players.value.human.filter((p) => p.id !== id);
+  players.value.online = players.value.online.filter((p) => p.id !== id);
+  players.value.local = players.value.local.filter((p) => p.id !== id);
+  await playerService.savePlayers(players.value);
+}
+
+async function doCreate() {
+  const newPlayer = {
+    id: crypto.randomUUID(),
+    name: roleName.value.trim(),
+  };
+
   if (createType.value === "human") {
-    if (players.humanPlayers.length > 0) return;
-    players.addHuman({
-      name: roleName.value.trim(),
+    players.value.human.push({
+      ...newPlayer,
       prefixPrompt: prefixPrompt.value,
     });
-    closeCreate();
-    return;
-  }
-  if (createType.value === "online") {
-    players.addOnline({
-      name: roleName.value.trim(),
+  } else if (createType.value === "online") {
+    players.value.online.push({
+      ...newPlayer,
       providerId: providerId.value,
       model: modelName.value.trim(),
       apiKey: apiKey.value.trim(),
     });
-    closeCreate();
-    return;
-  }
-  if (createType.value === "local") {
-    players.addLocal({
-      name: roleName.value.trim(),
+  } else if (createType.value === "local") {
+    players.value.local.push({
+      ...newPlayer,
       modelPath: modelPath.value.trim(),
       parameters: parameters.value.trim(),
     });
-    closeCreate();
   }
+
+  await playerService.savePlayers(players.value);
+  closeCreate();
 }
 
-async function loadPlayers() {
-  await players.loadPlayers();
-}
-
-onMounted(() => {
-  players.loadProviders();
-  loadPlayers();
+onMounted(async () => {
+  players.value = await playerService.getPlayers();
+  providers.value = await playerService.getProviders();
 });
 </script>

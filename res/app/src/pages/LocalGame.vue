@@ -40,55 +40,44 @@
           </div>
         </n-card>
       </div>
-
-      <div class="col-12" v-if="started">
-        <div class="row g-3">
-          <div class="col-6">
-            <n-card embedded>
-              <n-result status="404" :title="'有游戏吗你就开始'" />
-            </n-card>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, h, inject } from "vue";
+import { ref, computed, onMounted, h, inject } from "vue";
 import { useI18n } from "vue-i18n";
-import {
-  NCard,
-  NSelect,
-  NButton,
-  NTransfer,
-  NTree,
-  NResult,
-  NSpace,
-} from "naive-ui";
+import { NCard, NSelect, NButton, NTransfer, NTree } from "naive-ui";
 import type { TransferRenderSourceList, TreeOption } from "naive-ui";
-import { usePlayersStore } from "@/stores/players";
+import * as playerService from "@/services/players";
+import type { Socket } from "socket.io-client";
 
 const { t } = useI18n();
+const socket = inject<Socket>("socket");
+const connected = ref(false);
 const started = ref(false);
-const games = ref<string[]>([]);
 const gameId = ref("");
 
-// 配置部分
-const players = usePlayersStore();
+const games = ref<string[]>([]);
+const selectedPlayerIds = ref<string[]>([]);
+const players = ref<playerService.AllPlayers>({
+  human: [],
+  online: [],
+  local: [],
+});
 
+// 配置穿梭框部分
 type Option = { label: string; value: string; children?: Option[] };
-
 const treeData = computed<Option[]>(() => {
-  const humans: Option[] = players.humanPlayers.map((p) => ({
+  const humans: Option[] = players.value.human.map((p) => ({
     label: p.name,
     value: p.id,
   }));
-  const onlines: Option[] = players.onlinePlayers.map((p) => ({
+  const onlines: Option[] = players.value.online.map((p) => ({
     label: p.name,
     value: p.id,
   }));
-  const locals: Option[] = players.localPlayers.map((p) => ({
+  const locals: Option[] = players.value.local.map((p) => ({
     label: p.name,
     value: p.id,
   }));
@@ -115,17 +104,21 @@ function flattenLeaves(list?: Option[]): { label: string; value: string }[] {
   const result: { label: string; value: string }[] = [];
   function walk(items: Option[] = []) {
     for (const it of items) {
-      if (it.children && it.children.length) walk(it.children);
-      else result.push({ label: it.label, value: it.value });
+      if (it.children && it.children.length) {
+        walk(it.children);
+      } else {
+        result.push({ label: it.label, value: it.value });
+      }
     }
   }
   walk(list);
-  if (!result.length) return [{ label: t("role.empty"), value: "__empty" }];
+  if (!result.length) {
+    return [{ label: t("role.empty"), value: "__empty" }];
+  }
   return result;
 }
 
 const transferOptions = computed(() => flattenLeaves(treeData.value));
-
 const renderSourceList: TransferRenderSourceList = ({ onCheck, pattern }) => {
   return h(NTree, {
     style: "margin: 0 4px;",
@@ -147,8 +140,6 @@ const renderSourceList: TransferRenderSourceList = ({ onCheck, pattern }) => {
   });
 };
 
-const selectedPlayerIds = ref<string[]>([]);
-
 const canStart = computed(
   () => !!gameId.value && selectedPlayerIds.value.length >= 2
 );
@@ -157,27 +148,31 @@ const gameOptions = computed(() =>
   games.value.map((g) => ({ label: g, value: g }))
 );
 
-// 步骤
-const steps = computed(() => [
-  t("local.steps.prepare"),
-  t("local.steps.deal"),
-  t("local.steps.play"),
-  t("local.steps.result"),
-]);
-
-// 流程?
-const flowIndex = ref(0);
-
-// 加载
-async function loadGames() {
+// 载入游戏
+async function getGames() {
   const r = await fetch("/api/games");
   if (r.ok) games.value = await r.json();
 }
 
 function start() {
-  started.value = true;
-  flowIndex.value = 0;
+  if (socket) {
+    connected.value = true;
+    socket.emit("app:initGame", {
+      gameId: gameId.value,
+      playerIds: selectedPlayerIds.value,
+    });
+    started.value = true;
+    // 随机生成页面url
+    const gameUrl = `/gaming/${Math.random().toString(36).substring(2, 6)}`;
+    alert(gameUrl);
+    // TODO 完善游戏页面逻辑
+  } else {
+    console.error("socket 未连接");
+  }
 }
 
-onMounted(() => loadGames());
+onMounted(async () => {
+  getGames();
+  players.value = await playerService.getPlayers();
+});
 </script>
