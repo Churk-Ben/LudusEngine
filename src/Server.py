@@ -63,9 +63,8 @@ def api_get_players():
 @app.post("/api/players")
 def api_save_players():
     data = request.get_json(force=True) or {}
-    players_store = data.get("players") or {}
     with open(USERS_DIR / "players.json", "w", encoding="UTF-8") as f:
-        json.dump(players_store, f, ensure_ascii=False, indent=4)
+        json.dump(data, f, ensure_ascii=False, indent=4)
     return jsonify({"ok": True})
 
 
