@@ -1,5 +1,11 @@
 <template>
   <div class="container">
+    <div
+      class="text-muted"
+      style="position: absolute; top: 10px; left: 10px; font-size: 12px"
+    >
+      {{ socketConnected ? "Socket已连接" : "Socket未连接" }}
+    </div>
     <div class="row g-3">
       <div class="col-6">
         <n-card embedded>
@@ -16,11 +22,6 @@
                 <n-button @click="$router.push('/local')">
                   {{ t("local.title") }}
                 </n-button>
-                <div class="col-12">
-                  <div class="text-muted" style="font-size: 12px">
-                    {{ socketConnected ? "Socket已连接" : "Socket未连接" }}
-                  </div>
-                </div>
               </n-space>
             </template>
           </n-result>
@@ -44,6 +45,7 @@ const lastPong = ref<any>(null);
 
 onMounted(() => {
   if (socket) {
+    socketConnected.value = socket.connected;
     socket.on("connect", () => {
       socketConnected.value = true;
     });

@@ -1,12 +1,8 @@
 import { defineStore } from "pinia";
 
-export type ProviderKind = "api" | "local";
-
 export interface LLMProvider {
 	id: string;
 	name: string;
-	kind: ProviderKind;
-	endpoint?: string;
 }
 
 export interface HumanPlayer {

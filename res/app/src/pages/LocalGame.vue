@@ -45,22 +45,7 @@
         <div class="row g-3">
           <div class="col-6">
             <n-card embedded>
-              <n-result
-                status="info"
-                :title="t('online.lobbyTitle')"
-                :description="t('online.notOpen')"
-              >
-                <template #footer>
-                  <n-space vertical>
-                    <n-button @click="$router.push('/roles')">
-                      {{ t("role.title") }}
-                    </n-button>
-                    <n-button @click="$router.push('/local')">
-                      {{ t("local.title") }}
-                    </n-button>
-                  </n-space>
-                </template>
-              </n-result>
+              <n-result status="404" :title="'有游戏吗你就开始'" />
             </n-card>
           </div>
         </div>
@@ -194,7 +179,5 @@ function start() {
   flowIndex.value = 0;
 }
 
-onMounted(() => {
-  loadGames();
-});
+onMounted(() => loadGames());
 </script>

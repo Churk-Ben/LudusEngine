@@ -25,15 +25,17 @@ socketio = SocketIO(
     async_mode="eventlet",
 )
 
+# TODO 初始化游戏暂时
 providers = [
-    {"id": "openai", "name": "OpenAI", "kind": "api"},
-    {"id": "azure_openai", "name": "Azure OpenAI", "kind": "api"},
-    {"id": "ollama", "name": "Ollama", "kind": "api"},
+    {"id": "openai", "name": "OpenAI"},
+    {"id": "azure_openai", "name": "Azure OpenAI"},
+    {"id": "ollama", "name": "Ollama"},
 ]
 
-players_store = {"llm": [], "human": []}
+players_store = {"human": [], "online": [], "local": []}
 
 
+# TODO 路由
 @app.get("/providers")
 def api_providers():
     return jsonify(providers)
@@ -54,8 +56,8 @@ def api_players_list():
     return jsonify(players_store)
 
 
-@app.post("/players/llm")
-def api_players_add_llm():
+@app.post("/players/online")
+def api_players_add_online():
     data = request.get_json(force=True) or {}
     item = {
         "id": data.get("id") or os.urandom(8).hex(),
@@ -63,7 +65,20 @@ def api_players_add_llm():
         "providerId": data.get("providerId") or "",
         "model": data.get("model") or None,
     }
-    players_store["llm"].append(item)
+    players_store["online"].append(item)
+    return jsonify(item)
+
+
+@app.post("/players/local")
+def api_players_add_local():
+    data = request.get_json(force=True) or {}
+    item = {
+        "id": data.get("id") or os.urandom(8).hex(),
+        "modelName": data.get("modelName") or "",
+        "modelPath": data.get("modelPath") or "",
+        "parameters": data.get("parameters") or "",
+    }
+    players_store["local"].append(item)
     return jsonify(item)
 
 
@@ -80,7 +95,8 @@ def api_players_add_human():
 
 @app.delete("/players/<pid>")
 def api_players_remove(pid):
-    players_store["llm"] = [x for x in players_store["llm"] if x.get("id") != pid]
+    players_store["online"] = [x for x in players_store["online"] if x.get("id") != pid]
+    players_store["local"] = [x for x in players_store["local"] if x.get("id") != pid]
     players_store["human"] = [x for x in players_store["human"] if x.get("id") != pid]
     return jsonify({"ok": True})
 

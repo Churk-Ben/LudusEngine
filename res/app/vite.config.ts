@@ -7,7 +7,19 @@ export default defineConfig({
   root: path.resolve(__dirname),
   build: {
     outDir: path.resolve(__dirname, 'static'),
-    emptyOutDir: true
+    emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('naive-ui')) {
+              return 'naive-ui'
+            }
+            return 'vendor'
+          }
+        }
+      }
+    }
   },
   server: {
     port: 5173,
@@ -24,7 +36,11 @@ export default defineConfig({
         target: 'http://localhost:5000',
         changeOrigin: true
       },
-      '/llm': {
+      '/llmol': {
+        target: 'http://localhost:5000',
+        changeOrigin: true
+      },
+      '/llmlc': {
         target: 'http://localhost:5000',
         changeOrigin: true
       }
