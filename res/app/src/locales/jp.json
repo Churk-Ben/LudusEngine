@@ -43,7 +43,7 @@
       "fields": {
         "roleName": "ロール名",
         "provider": "プロバイダー",
-        "modelName": "モデル名",
+
         "api": "API KEY",
         "localPath": "モデルファイルのパス",
         "prefixPrompt": "プレフィックスプロンプト (長文)",

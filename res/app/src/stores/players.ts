@@ -21,7 +21,7 @@ export interface OnlinePlayer {
 
 export interface LocalPlayer {
 	id: string;
-	modelName: string;
+	name: string;
 	modelPath: string;
 	parameters: string;
 }
@@ -35,25 +35,61 @@ export const usePlayersStore = defineStore("players", {
 	}),
 	actions: {
 		async loadProviders() {
-			const r = await fetch("/api/config/providers");
-			if (r.ok) this.providers = await r.json();
+			const r = await fetch("/api/players/providers");
+			if (r.ok) {
+				const d = await r.json()
+				this.providers = d.data;
+			}
 		},
-		addHuman(p: Omit<HumanPlayer, "id">) {
-			const id = crypto.randomUUID();
-			this.humanPlayers.push({ id, ...p });
+
+		async loadPlayers() {
+			const r = await fetch("/api/players");
+			if (r.ok) {
+				const d = await r.json();
+				const players = d.data;
+				this.humanPlayers = players.human;
+				this.onlinePlayers = players.online;
+				this.localPlayers = players.local;
+			}
 		},
-		addOnline(p: Omit<OnlinePlayer, "id">) {
-			const id = crypto.randomUUID();
-			this.onlinePlayers.push({ id, ...p });
+
+		async savePlayers() {
+			const r = await fetch("/api/players", {
+				method: "POST",
+				body: JSON.stringify({
+					human: this.humanPlayers,
+					online: this.onlinePlayers,
+					local: this.localPlayers,
+				}),
+			});
+			if (r.ok) {
+				console.log("玩家数据保存成功");
+			} else {
+				console.error("玩家数据保存失败");
+			}
 		},
-		addLocal(p: Omit<LocalPlayer, "id">) {
-			const id = crypto.randomUUID();
-			this.localPlayers.push({ id, ...p });
-		},
-		removePlayer(id: string) {
+
+		async removePlayer(id: string) {
 			this.humanPlayers = this.humanPlayers.filter((x) => x.id !== id);
 			this.onlinePlayers = this.onlinePlayers.filter((x) => x.id !== id);
 			this.localPlayers = this.localPlayers.filter((x) => x.id !== id);
+			await this.savePlayers();
 		},
+
+		async addHuman(p: Omit<HumanPlayer, "id">) {
+			const id = crypto.randomUUID();
+			this.humanPlayers.push({ id, ...p });
+			await this.savePlayers();
+		},
+		async addOnline(p: Omit<OnlinePlayer, "id">) {
+			const id = crypto.randomUUID();
+			this.onlinePlayers.push({ id, ...p });
+			await this.savePlayers();
+		},
+		async addLocal(p: Omit<LocalPlayer, "id">) {
+			const id = crypto.randomUUID();
+			this.localPlayers.push({ id, ...p });
+			await this.savePlayers();
+		}
 	},
 });

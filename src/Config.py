@@ -13,7 +13,7 @@ log = get_logger("Config")
 def load_config():
     config = {}
     try:
-        with open(CONFIG_FILE, "r") as f:
+        with open(CONFIG_FILE, "r", encoding="UTF-8") as f:
             config = yaml.safe_load(f)
         log.info(f"加载配置文件 {CONFIG_FILE} 成功")
     except FileNotFoundError:

@@ -89,7 +89,7 @@ const treeData = computed<Option[]>(() => {
     value: p.id,
   }));
   const locals: Option[] = players.localPlayers.map((p) => ({
-    label: p.modelName,
+    label: p.name,
     value: p.id,
   }));
   return [
@@ -170,7 +170,7 @@ const flowIndex = ref(0);
 
 // 加载
 async function loadGames() {
-  const r = await fetch("/games");
+  const r = await fetch("/api/games");
   if (r.ok) games.value = await r.json();
 }
 

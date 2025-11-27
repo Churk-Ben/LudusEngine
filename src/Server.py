@@ -2,6 +2,7 @@ from flask import Flask, send_from_directory, jsonify, request
 from flask_cors import CORS
 from flask_socketio import SocketIO, emit
 from pathlib import Path
+import json
 import os
 from .Logger import get_logger
 from .Config import load_config
@@ -30,34 +31,20 @@ socketio = SocketIO(
     async_mode="eventlet",
 )
 
-# TODO 初始化游戏时设置
-providers = [
-    {"id": "openai", "name": "OpenAI"},
-    {"id": "deepseek", "name": "Deepseek"},
-    {"id": "ollama", "name": "Ollama"},
-]
-
-players_store = {"human": [], "online": [], "local": []}
+# TODO 加载玩家
+if USERS_DIR.exists():
+    with open(USERS_DIR / "players.json", "r", encoding="UTF-8") as f:
+        players_store = json.load(f)
 
 
-# TODO 整理路由
-@app.get("/config")
+# config 断点
+@app.get("/api/config")
 def api_config():
     pass
 
 
-@app.get("/config/providers")
-def api_providers():
-    import litellm
-
-    providers = [
-        {"id": provider, "name": provider.capitalize()}
-        for provider in litellm.provider_list
-    ]
-    return jsonify(providers)
-
-
-@app.get("/games")
+# games 断点
+@app.get("/api/games")
 def api_games():
     items = []
     if GAMES_DIR.exists():
@@ -67,12 +54,35 @@ def api_games():
     return jsonify(items)
 
 
-@app.get("/players")
-def api_players_list():
-    return jsonify(players_store)
+# players 断点
+@app.get("/api/players")
+def api_get_players():
+    return jsonify({"ok": True, "data": players_store})
 
 
-@app.post("/players/online")
+@app.post("/api/players")
+def api_save_players():
+    data = request.get_json(force=True) or {}
+    players_store = data.get("players") or {}
+    with open(USERS_DIR / "players.json", "w", encoding="UTF-8") as f:
+        json.dump(players_store, f, ensure_ascii=False, indent=4)
+    return jsonify({"ok": True})
+
+
+@app.get("/api/players/providers")
+@log.decorate.info("拉取供应商列表")
+def api_providers():
+    import litellm
+
+    _providers = []
+    for provider in litellm.provider_list:
+        _providers.append({"id": provider, "name": provider.capitalize()})
+
+    _providers = sorted(_providers, key=lambda x: x["name"])
+    return jsonify({"ok": True, "data": _providers})
+
+
+@app.post("/api/players/llm/online")
 def api_players_add_online():
     data = request.get_json(force=True) or {}
     item = {
@@ -85,12 +95,12 @@ def api_players_add_online():
     return jsonify(item)
 
 
-@app.post("/players/local")
+@app.post("/api/players/llm/local")
 def api_players_add_local():
     data = request.get_json(force=True) or {}
     item = {
         "id": data.get("id") or os.urandom(8).hex(),
-        "modelName": data.get("modelName") or "",
+        "name": data.get("name") or "",
         "modelPath": data.get("modelPath") or "",
         "parameters": data.get("parameters") or "",
     }
@@ -98,7 +108,7 @@ def api_players_add_local():
     return jsonify(item)
 
 
-@app.post("/players/human")
+@app.post("/api/players/human/local")
 def api_players_add_human():
     data = request.get_json(force=True) or {}
     item = {
@@ -106,7 +116,7 @@ def api_players_add_human():
         "name": data.get("name") or "",
     }
     players_store["human"].append(item)
-    return jsonify(item)
+    return jsonify({"ok": True, "data": item})
 
 
 @app.delete("/players/<pid>")
@@ -115,33 +125,6 @@ def api_players_remove(pid):
     players_store["local"] = [x for x in players_store["local"] if x.get("id") != pid]
     players_store["human"] = [x for x in players_store["human"] if x.get("id") != pid]
     return jsonify({"ok": True})
-
-
-@app.post("/llmol/<providerId>/completions")
-def api_llmol_completions(providerId):
-    data = request.get_json(force=True) or {}
-    prompt = data.get("prompt") or ""
-    api = data.get("api") or ""
-    model = data.get("model") or ""
-    return jsonify(
-        {
-            "kind": "online",
-            "provider": providerId,
-            "api": api,
-            "model": model,
-            "output": f"echo: {prompt[:200]}",
-        }
-    )
-
-
-@app.post("/llmlc/completions")
-def api_llmlc_completions():
-    data = request.get_json(force=True) or {}
-    prompt = data.get("prompt") or ""
-    model_path = data.get("modelPath") or ""
-    return jsonify(
-        {"kind": "local", "modelPath": model_path, "output": f"echo: {prompt[:200]}"}
-    )
 
 
 @app.get("/")
@@ -162,16 +145,10 @@ def serve_static(path):
 
 
 @socketio.on("connect")
-@log.decorate.info("客户端连接函数")
+@log.decorate.info("捕获到链接请求")
 def on_connect():
-    log.info("客户端连接")
+    log.info("客户端已连接")
     emit("server:ready", {"ok": True})
-
-
-@socketio.on("client:ping")
-@log.decorate.info("客户端发送 ping 消息, 参数 data={data}")
-def on_ping(data=None):
-    emit("server:pong", {"ok": True, "echo": data})
 
 
 if __name__ == "__main__":

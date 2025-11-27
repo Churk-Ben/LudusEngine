@@ -66,7 +66,7 @@
                     closable
                     class="mb-1"
                     size="small"
-                    :title="p.modelName"
+                    :title="p.name"
                     @close="players.removePlayer(p.id)"
                   >
                     {{ p.modelPath }}
@@ -134,7 +134,7 @@
                 <div class="col-12">
                   <n-input
                     v-model:value="modelName"
-                    :placeholder="t('role.modal.fields.modelName')"
+                    :placeholder="t('role.modal.fields.roleName')"
                   />
                 </div>
                 <div class="col-12">
@@ -294,7 +294,7 @@ function doCreate() {
   }
   if (createType.value === "local") {
     players.addLocal({
-      modelName: roleName.value.trim(),
+      name: roleName.value.trim(),
       modelPath: modelPath.value.trim(),
       parameters: parameters.value.trim(),
     });
@@ -302,5 +302,12 @@ function doCreate() {
   }
 }
 
-onMounted(() => players.loadProviders());
+async function loadPlayers() {
+  await players.loadPlayers();
+}
+
+onMounted(() => {
+  players.loadProviders();
+  loadPlayers();
+});
 </script>
