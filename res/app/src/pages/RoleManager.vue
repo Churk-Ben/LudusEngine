@@ -25,7 +25,6 @@
                     :title="p.name"
                     @close="removePlayer(p.id)"
                   >
-                    >
                     <div class="text-truncate">{{ p.prefixPrompt }}</div>
                   </n-card>
                 </div>
