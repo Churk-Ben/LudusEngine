@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
+from typing import Dict, Optional
 
 BASE = Path(__file__).resolve().parent.parent
 
@@ -15,10 +16,14 @@ class Game(ABC):
 
 
 class Player(ABC):
+    def __init__(self, name: str, info: Dict[str, str], status: Dict[str, str]):
+        self.name = name
+        self.role = info.get("role") or ""
+
     @abstractmethod
-    def get_choice(self):
+    def choose(self):
         pass
 
     @abstractmethod
-    def call_speak(self):
+    def speak(self):
         pass

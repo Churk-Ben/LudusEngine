@@ -4,16 +4,10 @@ import time
 from typing import List, Dict, Optional
 from pathlib import Path
 
-import sys
-
-# Add project root to sys.path to allow direct execution
-BASE = Path(__file__).resolve().parent.parent.parent
-sys.path.insert(0, str(BASE))
-
-from .werewolf.logger import GameLogger
-from .werewolf.models import Role, DeathReason
-from .werewolf.player import Player
-from .werewolf.ui import prompt_for_choice
+from werewolf.logger import GameLogger
+from werewolf.models import Role, DeathReason
+from werewolf.player import Player
+from werewolf.ui import prompt_for_choice
 
 
 class WerewolfGame:

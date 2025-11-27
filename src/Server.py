@@ -4,6 +4,7 @@ from flask_socketio import SocketIO, emit
 from pathlib import Path
 import os
 from .Logger import get_logger
+from .Config import load_config
 
 BASE = Path(__file__).resolve().parent.parent
 STATIC_DIR = BASE / "res" / "app" / "static"
@@ -11,7 +12,10 @@ GAMES_DIR = BASE / ".games"
 USERS_DIR = BASE / ".users"
 
 # 初始化日志
-log = get_logger("LudusServer")
+log = get_logger("Server")
+
+# 加载配置
+config = load_config()
 
 # 初始化Flask应用
 app = Flask(
@@ -29,7 +33,7 @@ socketio = SocketIO(
 # TODO 初始化游戏时设置
 providers = [
     {"id": "openai", "name": "OpenAI"},
-    {"id": "azure_openai", "name": "Azure OpenAI"},
+    {"id": "deepseek", "name": "Deepseek"},
     {"id": "ollama", "name": "Ollama"},
 ]
 
@@ -37,8 +41,19 @@ players_store = {"human": [], "online": [], "local": []}
 
 
 # TODO 整理路由
-@app.get("/providers")
+@app.get("/config")
+def api_config():
+    pass
+
+
+@app.get("/config/providers")
 def api_providers():
+    import litellm
+
+    providers = [
+        {"id": provider, "name": provider.capitalize()}
+        for provider in litellm.provider_list
+    ]
     return jsonify(providers)
 
 

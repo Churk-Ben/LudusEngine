@@ -24,7 +24,7 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      '/providers': {
+      '/config': {
         target: 'http://localhost:5000',
         changeOrigin: true
       },
@@ -33,14 +33,6 @@ export default defineConfig({
         changeOrigin: true
       },
       '/players': {
-        target: 'http://localhost:5000',
-        changeOrigin: true
-      },
-      '/llmol': {
-        target: 'http://localhost:5000',
-        changeOrigin: true
-      },
-      '/llmlc': {
         target: 'http://localhost:5000',
         changeOrigin: true
       }
