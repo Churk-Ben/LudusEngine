@@ -10,10 +10,10 @@ import sys
 BASE = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(BASE))
 
-from games.werewolf.logger import GameLogger
-from games.werewolf.models import Role, DeathReason
-from games.werewolf.player import Player
-from games.werewolf.ui import prompt_for_choice
+from .werewolf.logger import GameLogger
+from .werewolf.models import Role, DeathReason
+from .werewolf.player import Player
+from .werewolf.ui import prompt_for_choice
 
 
 class WerewolfGame:

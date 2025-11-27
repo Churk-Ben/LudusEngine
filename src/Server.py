@@ -7,7 +7,8 @@ from .Logger import get_logger
 
 BASE = Path(__file__).resolve().parent.parent
 STATIC_DIR = BASE / "res" / "app" / "static"
-GAMES_DIR = BASE / "games"
+GAMES_DIR = BASE / ".games"
+USERS_DIR = BASE / ".users"
 
 # 初始化日志
 log = get_logger("LudusServer")
@@ -25,7 +26,7 @@ socketio = SocketIO(
     async_mode="eventlet",
 )
 
-# TODO 初始化游戏暂时
+# TODO 初始化游戏时设置
 providers = [
     {"id": "openai", "name": "OpenAI"},
     {"id": "azure_openai", "name": "Azure OpenAI"},
@@ -35,7 +36,7 @@ providers = [
 players_store = {"human": [], "online": [], "local": []}
 
 
-# TODO 路由
+# TODO 整理路由
 @app.get("/providers")
 def api_providers():
     return jsonify(providers)
