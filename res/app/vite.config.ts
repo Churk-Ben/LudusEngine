@@ -24,15 +24,7 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      '/config': {
-        target: 'http://localhost:5000',
-        changeOrigin: true
-      },
-      '/games': {
-        target: 'http://localhost:5000',
-        changeOrigin: true
-      },
-      '/players': {
+      '/api': {
         target: 'http://localhost:5000',
         changeOrigin: true
       }

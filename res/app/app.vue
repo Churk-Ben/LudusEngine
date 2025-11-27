@@ -1,45 +1,45 @@
 <template>
   <n-config-provider
-      :date-locale="naiveDateLocale"
-      :inline-theme-disabled="true"
-      :locale="naiveLocale"
-      :theme="naiveTheme"
+    :date-locale="naiveDateLocale"
+    :inline-theme-disabled="true"
+    :locale="naiveLocale"
+    :theme="naiveTheme"
   >
     <div class="app">
       <n-layout has-sider style="height: 100vh">
         <n-layout-sider
-            :width="collapsed ? 64 : 240"
-            bordered
-            class="app-sider"
+          :width="collapsed ? 64 : 240"
+          bordered
+          class="app-sider"
         >
           <div
-              :style="{ opacity: siderContentVisible ? 1 : 0 }"
-              class="sider-content d-flex flex-column justify-content-between h-100"
+            :style="{ opacity: siderContentVisible ? 1 : 0 }"
+            class="sider-content d-flex flex-column justify-content-between h-100"
           >
             <n-menu
-                :collapsed="collapsed"
-                :collapsed-width="64"
-                :indent="16"
-                :options="menuOptions"
-                :root-indent="16"
-                :value="menuValue"
-                class="app-menu"
-                @update:value="onMenu"
+              :collapsed="collapsed"
+              :collapsed-width="64"
+              :indent="16"
+              :options="menuOptions"
+              :root-indent="16"
+              :value="menuValue"
+              class="app-menu"
+              @update:value="onMenu"
             />
             <n-menu
-                :collapsed="collapsed"
-                :collapsed-width="64"
-                :indent="16"
-                :options="ctrlOptions"
-                :root-indent="16"
-                :value="ctrlValue"
-                class="app-ctrl"
-                @update:value="onCtrl"
+              :collapsed="collapsed"
+              :collapsed-width="64"
+              :indent="16"
+              :options="ctrlOptions"
+              :root-indent="16"
+              :value="ctrlValue"
+              class="app-ctrl"
+              @update:value="onCtrl"
             />
           </div>
         </n-layout-sider>
         <n-layout-content class="app-content" content-style="min-height: 0;">
-          <RouterView/>
+          <RouterView />
         </n-layout-content>
       </n-layout>
     </div>
@@ -47,9 +47,9 @@
 </template>
 
 <script lang="ts" setup>
-import {computed, h, onMounted, ref, watch} from "vue";
-import {useI18n} from "vue-i18n";
-import {RouterView, useRoute, useRouter} from "vue-router";
+import { computed, h, onMounted, ref, watch } from "vue";
+import { useI18n } from "vue-i18n";
+import { RouterView, useRoute, useRouter } from "vue-router";
 import {
   darkTheme,
   dateEnUS,
@@ -65,7 +65,7 @@ import {
   NMenu,
   zhCN,
 } from "naive-ui";
-import {FontAwesomeIcon} from "@fortawesome/vue-fontawesome";
+import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 import {
   faBars,
   faGamepad,
@@ -77,13 +77,13 @@ import {
   faUserGroup,
 } from "@fortawesome/free-solid-svg-icons";
 
-const {locale, t} = useI18n();
+const { locale, t } = useI18n();
 const route = useRoute();
 const router = useRouter();
 
 function renderIcon(icon: any) {
   return () =>
-      h(NIcon, {size: 16}, {default: () => h(FontAwesomeIcon, {icon})});
+    h(NIcon, { size: 16 }, { default: () => h(FontAwesomeIcon, { icon }) });
 }
 
 // 应用侧边栏折叠状态
@@ -114,14 +114,14 @@ function toggleCollapsed() {
 // 应用菜单选项
 const menuValue = ref(route.path);
 const menuOptions = computed(() => [
-  {label: t("sider.menu.home"), key: "/", icon: renderIcon(faHome)},
+  { label: t("sider.menu.home"), key: "/", icon: renderIcon(faHome) },
   {
     label: t("sider.menu.roles"),
     key: "/roles",
     icon: renderIcon(faUserGroup),
   },
-  {label: t("sider.menu.local"), key: "/local", icon: renderIcon(faGamepad)},
-  {label: t("sider.menu.online"), key: "/online", icon: renderIcon(faGlobe)},
+  { label: t("sider.menu.local"), key: "/local", icon: renderIcon(faGamepad) },
+  { label: t("sider.menu.online"), key: "/online", icon: renderIcon(faGlobe) },
 ]);
 
 function onMenu(key: string) {
@@ -171,19 +171,19 @@ const prefersDark = () => {
     return localStorage.getItem("themeMode") === "dark";
   }
   return (
-      window.matchMedia &&
-      window.matchMedia("(prefers-color-scheme: dark)").matches
+    window.matchMedia &&
+    window.matchMedia("(prefers-color-scheme: dark)").matches
   );
 };
 const themeMode = ref<"light" | "dark">(prefersDark() ? "dark" : "light");
 const naiveTheme = computed(() =>
-    themeMode.value === "dark" ? darkTheme : null
+  themeMode.value === "dark" ? darkTheme : null
 );
 
 const themeLabel = computed(() =>
-    themeMode.value === "light"
-        ? t("sider.ctrl.theme.dark")
-        : t("sider.ctrl.theme.light")
+  themeMode.value === "light"
+    ? t("sider.ctrl.theme.dark")
+    : t("sider.ctrl.theme.light")
 );
 
 function toggleTheme() {
@@ -194,9 +194,9 @@ function toggleTheme() {
 // 应用语言选项
 const localeLabel = computed(() => t("sider.ctrl.locale"));
 const localeOptions = [
-  {label: "中文", value: "zh-CN"},
-  {label: "English", value: "en"},
-  {label: "日本語", value: "jp"},
+  { label: "中文", value: "zh-CN" },
+  { label: "English", value: "en" },
+  { label: "日本語", value: "jp" },
 ];
 
 const naiveLocale = computed(() => {
@@ -226,10 +226,10 @@ onMounted(() => {
 });
 
 watch(
-    () => route.path,
-    (p) => {
-      menuValue.value = p;
-    }
+  () => route.path,
+  (p) => {
+    menuValue.value = p;
+  }
 );
 </script>
 
@@ -244,12 +244,12 @@ watch(
 
 .app-sider {
   transition: width var(--motion-duration) var(--motion-easing),
-  max-width var(--motion-duration) var(--motion-easing),
-  min-width var(--motion-duration) var(--motion-easing),
-  color var(--motion-duration) var(--motion-easing),
-  background-color var(--motion-duration) var(--motion-easing),
-  border-color var(--motion-duration) var(--motion-easing),
-  flex-basis var(--motion-duration) var(--motion-easing);
+    max-width var(--motion-duration) var(--motion-easing),
+    min-width var(--motion-duration) var(--motion-easing),
+    color var(--motion-duration) var(--motion-easing),
+    background-color var(--motion-duration) var(--motion-easing),
+    border-color var(--motion-duration) var(--motion-easing),
+    flex-basis var(--motion-duration) var(--motion-easing);
 }
 
 .sider-content {
@@ -259,11 +259,11 @@ watch(
 .app-menu :deep(.n-menu-item-content),
 .app-ctrl:deep(.n-menu-item-content) {
   transition: color var(--motion-duration) var(--motion-easing),
-  background-color var(--motion-duration) var(--motion-easing),
-  border-color var(--motion-duration) var(--motion-easing),
-  padding var(--motion-duration) var(--motion-easing),
-  margin var(--motion-duration) var(--motion-easing),
-  transform var(--motion-duration) var(--motion-easing);
+    background-color var(--motion-duration) var(--motion-easing),
+    border-color var(--motion-duration) var(--motion-easing),
+    padding var(--motion-duration) var(--motion-easing),
+    margin var(--motion-duration) var(--motion-easing),
+    transform var(--motion-duration) var(--motion-easing);
   will-change: padding, margin, transform;
 }
 
