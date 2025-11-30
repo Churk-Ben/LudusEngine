@@ -71,15 +71,15 @@ type Option = { label: string; value: string; children?: Option[] };
 const treeData = computed<Option[]>(() => {
   const humans: Option[] = players.value.human.map((p) => ({
     label: p.name,
-    value: p.id,
+    value: p.uuid,
   }));
   const onlines: Option[] = players.value.online.map((p) => ({
     label: p.name,
-    value: p.id,
+    value: p.uuid,
   }));
   const locals: Option[] = players.value.local.map((p) => ({
     label: p.name,
-    value: p.id,
+    value: p.uuid,
   }));
   return [
     {
@@ -148,10 +148,13 @@ const gameOptions = computed(() =>
   games.value.map((g) => ({ label: g, value: g }))
 );
 
-// 载入游戏
+// TODO 载入游戏
 async function getGames() {
   const r = await fetch("/api/games");
-  if (r.ok) games.value = await r.json();
+  if (r.ok) {
+    const data = await r.json();
+    games.value = data.data;
+  }
 }
 
 function start() {

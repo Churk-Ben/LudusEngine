@@ -15,12 +15,5 @@
       "apiKey": "?"
     }
   ],
-  "local": [
-    {
-      "uuid": "difyugaiouer",
-      "name": "test",
-      "modelPath": "E:\\Models\\",
-      "parameters": ""
-    }
-  ]
+  "local": []
 }

@@ -17,6 +17,7 @@ log = get_logger("Server")
 # 加载配置
 config = load_config()
 
+
 # 初始化Flask应用
 app = Flask(
     __name__,
@@ -56,7 +57,3 @@ def serve_static(path):
 def on_connect():
     log.info("客户端已连接")
     emit("server:ready", {"ok": True})
-
-
-if __name__ == "__main__":
-    socketio.run(app, host="0.0.0.0", port=5000, debug=True)

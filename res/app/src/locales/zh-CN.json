@@ -43,7 +43,7 @@
       "fields": {
         "roleName": "角色名称",
         "provider": "提供商",
-
+        "modelName": "模型",
         "api": "API KEY",
         "localPath": "模型文件路径",
         "prefixPrompt": "前缀提示词(长文本)",

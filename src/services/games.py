@@ -18,8 +18,11 @@ def api_games_get():
             if p.is_dir():
                 items.append(p.name)
 
-    data = {"ok": True, "data": items}
-    return jsonify(data)
+    games_log.info(f"游戏列表: {items}")
+    return (
+        jsonify({"ok": True, "data": items}),
+        200,
+    )
 
 
 if __name__ == "__main__":

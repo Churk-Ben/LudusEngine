@@ -2,13 +2,12 @@ import json
 import uuid
 from flask import Blueprint, jsonify, request
 from pathlib import Path
-
-from services.games import games_log
 from ..Logger import get_logger
 
 
 BASE = Path(__file__).resolve().parent.parent.parent
 USERS_DIR = BASE / ".users"
+
 
 players_bp = Blueprint("players", __name__)
 players_log = get_logger("PlayerService")
@@ -26,7 +25,10 @@ if USERS_DIR.exists():
 def api_players_get():
     data = players_store
     players_log.info(f"玩家列表: {data}")
-    return jsonify({"ok": True, "data": data})
+    return (
+        jsonify({"ok": True, "data": data}),
+        200,
+    )
 
 
 @players_bp.route("/api/players/providers", methods=["GET"])
@@ -39,8 +41,11 @@ def api_players_providers_get():
         _providers.append({"id": provider, "name": provider.capitalize()})
 
     data = sorted(_providers, key=lambda x: x["name"])
-    players_log.info(f"供应商列表: {data}")
-    return jsonify({"ok": True, "data": data})
+    players_log.info(f"已加载 {len(data)} 个供应商")
+    return (
+        jsonify({"ok": True, "data": data}),
+        200,
+    )
 
 
 @players_bp.route("/api/players/add", methods=["POST"])
@@ -64,15 +69,15 @@ def api_players_add_post():
             400,
         )
 
-    if "id" not in player_data or not player_data["id"]:
-        player_data["id"] = str(uuid.uuid4())
+    if "uuid" not in player_data or not player_data["uuid"]:
+        player_data["uuid"] = str(uuid.uuid4())
 
     players_store[player_type].append(player_data)
 
     # 持久化
     try:
         with open(USERS_DIR / "players.json", "w", encoding="UTF-8") as f:
-            json.dump(players_store, f, ensure_ascii=False, indent=4)
+            json.dump(players_store, f, ensure_ascii=False, indent=2)
     except Exception as e:
         players_log.error(f"玩家数据保存失败: {e}")
         return (
@@ -80,7 +85,10 @@ def api_players_add_post():
             500,
         )
 
-    return jsonify({"ok": True, "data": player_data})
+    return (
+        jsonify({"ok": True, "data": player_data}),
+        200,
+    )
 
 
 @players_bp.route("/api/players/<pid>", methods=["DELETE"])
@@ -88,13 +96,13 @@ def api_players_add_post():
 def api_players_remove_delete(pid):
     for player_type in players_store:
         players_store[player_type] = [
-            x for x in players_store[player_type] if x.get("id") != pid
+            x for x in players_store[player_type] if x.get("uuid") != pid
         ]
 
     # 将变更持久化到文件
     try:
         with open(USERS_DIR / "players.json", "w", encoding="UTF-8") as f:
-            json.dump(players_store, f, ensure_ascii=False, indent=4)
+            json.dump(players_store, f, ensure_ascii=False, indent=2)
     except Exception as e:
         players_log.error(f"玩家数据删除失败: {e}")
         return (
@@ -102,4 +110,18 @@ def api_players_remove_delete(pid):
             500,
         )
 
-    return jsonify({"ok": True})
+    return (
+        jsonify({"ok": True}),
+        200,
+    )
+
+
+if __name__ == "__main__":
+    from flask import Flask
+    from flask_cors import CORS
+
+    app = Flask(__name__)
+    CORS(app)
+    app.register_blueprint(players_bp)
+
+    app.run(debug=True)

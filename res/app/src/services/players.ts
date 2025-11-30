@@ -1,6 +1,6 @@
 // 玩家服务接口
 export interface LLMProvider {
-  uuid: string;
+  id: string;
   name: string;
 }
 
@@ -52,19 +52,27 @@ export async function getProviders(): Promise<LLMProvider[]> {
 
 export async function addPlayer(
   type: "human" | "online" | "local",
-  player: HumanPlayer | OnlinePlayer | LocalPlayer
-): Promise<boolean> {
+  player: Omit<HumanPlayer | OnlinePlayer | LocalPlayer, "uuid">
+): Promise<HumanPlayer | OnlinePlayer | LocalPlayer | null> {
   const r = await fetch("/api/players/add", {
     method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify({ type, player }),
   });
   if (r.ok) {
-    return true;
+    const d = await r.json();
+    return d.data;
   } else {
-    const data = await r.json();
-    const msg = data.get("error") || "玩家数据保存失败";
-    console.error(msg);
-    return false;
+    try {
+      const data = await r.json();
+      const msg = data.error || "玩家数据保存失败";
+      console.error(msg);
+    } catch (e) {
+      console.error("玩家数据保存失败", await r.text());
+    }
+    return null;
   }
 }
 
@@ -72,12 +80,14 @@ export async function removePlayer(uuid: string): Promise<boolean> {
   const r = await fetch(`/api/players/${uuid}`, {
     method: "DELETE",
   });
-  if (r.ok) {
-    return true;
-  } else {
-    const data = await r.json();
-    const msg = data.get("error") || "玩家数据删除失败";
-    console.error(msg);
-    return false;
+  if (!r.ok) {
+    try {
+      const data = await r.json();
+      const msg = data.error || "玩家数据删除失败";
+      console.error(msg);
+    } catch (e) {
+      console.error("玩家数据删除失败", await r.text());
+    }
   }
+  return r.ok;
 }

@@ -17,13 +17,13 @@
                 <div v-if="players.human.length === 0">
                   <n-card size="small" :title="t('role.empty')" />
                 </div>
-                <div v-else v-for="p in players.human" :key="p.id">
+                <div v-else v-for="p in players.human" :key="p.uuid">
                   <n-card
                     closable
                     class="mb-1"
                     size="small"
                     :title="p.name"
-                    @close="removePlayer(p.id)"
+                    @close="handleRemovePlayer(p.uuid)"
                   >
                     <div class="text-truncate">{{ p.prefixPrompt }}</div>
                   </n-card>
@@ -39,13 +39,13 @@
                 <div v-if="players.online.length === 0">
                   <n-card size="small" :title="t('role.empty')" />
                 </div>
-                <div v-else v-for="p in players.online" :key="p.id">
+                <div v-else v-for="p in players.online" :key="p.uuid">
                   <n-card
                     closable
                     class="mb-1"
                     size="small"
                     :title="p.name"
-                    @close="removePlayer(p.id)"
+                    @close="handleRemovePlayer(p.uuid)"
                   >
                     {{ providerName(p.providerId) }} - {{ p.model }}
                   </n-card>
@@ -61,13 +61,13 @@
                 <div v-if="players.local.length === 0">
                   <n-card size="small" :title="t('role.empty')" />
                 </div>
-                <div v-else v-for="p in players.local" :key="p.id">
+                <div v-else v-for="p in players.local" :key="p.uuid">
                   <n-card
                     closable
                     class="mb-1"
                     size="small"
                     :title="p.name"
-                    @close="removePlayer(p.id)"
+                    @close="handleRemovePlayer(p.uuid)"
                   >
                     {{ p.modelPath }}
                   </n-card>
@@ -118,12 +118,18 @@
                     v-model:value="prefixPrompt"
                     type="textarea"
                     :placeholder="t('role.modal.fields.prefixPrompt')"
-                    rows="6"
+                    rows="5"
                   />
                 </div>
               </template>
 
               <template v-if="createType === 'online'">
+                <div class="col-12">
+                  <n-input
+                    v-model:value="roleName"
+                    :placeholder="t('role.modal.fields.roleName')"
+                  />
+                </div>
                 <div class="col-12">
                   <n-select
                     v-model:value="providerId"
@@ -134,7 +140,7 @@
                 <div class="col-12">
                   <n-input
                     v-model:value="modelName"
-                    :placeholder="t('role.modal.fields.roleName')"
+                    :placeholder="t('role.modal.fields.modelName')"
                   />
                 </div>
                 <div class="col-12">
@@ -144,19 +150,13 @@
                     type="password"
                   />
                 </div>
-                <div class="col-12">
-                  <n-input
-                    v-model:value="roleName"
-                    :placeholder="t('role.modal.fields.roleName')"
-                  />
-                </div>
               </template>
 
               <template v-if="createType === 'local'">
                 <div class="col-12">
                   <n-input
                     v-model:value="roleName"
-                    :placeholder="t('role.modal.fields.name')"
+                    :placeholder="t('role.modal.fields.roleName')"
                   />
                 </div>
                 <div class="col-12">
@@ -168,7 +168,9 @@
                 <div class="col-12">
                   <n-input
                     v-model:value="parameters"
+                    type="textarea"
                     :placeholder="t('role.modal.fields.parameters')"
+                    rows="3"
                   />
                 </div>
               </template>
@@ -229,6 +231,7 @@ const parameters = ref("");
 const providerOptions = computed(() =>
   providers.value.map((p) => ({ label: p.name, value: p.id }))
 );
+
 function providerName(id: string) {
   return providers.value.find((x) => x.id === id)?.name || id;
 }
@@ -278,45 +281,68 @@ const canCreate = computed(() => {
   return false;
 });
 
-async function removePlayer(id: string) {
-  players.value.human = players.value.human.filter((p) => p.id !== id);
-  players.value.online = players.value.online.filter((p) => p.id !== id);
-  players.value.local = players.value.local.filter((p) => p.id !== id);
-  await playerService.savePlayers(players.value);
-}
-
 async function doCreate() {
-  const newPlayer = {
-    id: crypto.randomUUID(),
+  let newPlayer:
+    | Omit<playerService.HumanPlayer, "uuid">
+    | Omit<playerService.OnlinePlayer, "uuid">
+    | Omit<playerService.LocalPlayer, "uuid">;
+
+  const basePlayer = {
     name: roleName.value.trim(),
   };
 
-  if (createType.value === "human") {
-    players.value.human.push({
-      ...newPlayer,
-      prefixPrompt: prefixPrompt.value,
-    });
-  } else if (createType.value === "online") {
-    players.value.online.push({
-      ...newPlayer,
-      providerId: providerId.value,
-      model: modelName.value.trim(),
-      apiKey: apiKey.value.trim(),
-    });
-  } else if (createType.value === "local") {
-    players.value.local.push({
-      ...newPlayer,
-      modelPath: modelPath.value.trim(),
-      parameters: parameters.value.trim(),
-    });
+  switch (createType.value) {
+    case "human":
+      newPlayer = {
+        ...basePlayer,
+        prefixPrompt: prefixPrompt.value,
+      };
+      break;
+    case "online":
+      newPlayer = {
+        ...basePlayer,
+        providerId: providerId.value,
+        model: modelName.value.trim(),
+        apiKey: apiKey.value.trim(),
+      };
+      break;
+    case "local":
+      newPlayer = {
+        ...basePlayer,
+        modelPath: modelPath.value.trim(),
+        parameters: parameters.value.trim(),
+      };
+      break;
+    default:
+      console.error("Invalid create type");
+      return;
   }
 
-  await playerService.savePlayers(players.value);
+  const createdPlayer = await playerService.addPlayer(
+    createType.value,
+    newPlayer
+  );
+
+  if (createdPlayer) {
+    // @ts-ignore
+    players.value[createType.value].push(createdPlayer);
+  }
+
   closeCreate();
 }
 
+async function handleRemovePlayer(pid: string) {
+  const success = await playerService.removePlayer(pid);
+  if (success) {
+    for (const type in players.value) {
+      // @ts-ignore
+      players.value[type] = players.value[type].filter((p) => p.uuid !== pid);
+    }
+  }
+}
+
 onMounted(async () => {
-  players.value = await playerService.getPlayers();
   providers.value = await playerService.getProviders();
+  players.value = await playerService.getPlayers();
 });
 </script>
