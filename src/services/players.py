@@ -24,7 +24,7 @@ if USERS_DIR.exists():
 @players_log.decorate.info("拉取玩家列表")
 def api_players_get():
     data = players_store
-    players_log.info(f"玩家列表: {data}")
+    players_log.info(f"已加载 {len(data["human"]+data["online"]+data["local"])} 个玩家")
     return (
         jsonify({"ok": True, "data": data}),
         200,
@@ -85,6 +85,7 @@ def api_players_add_post():
             500,
         )
 
+    players_log.info(f"已添加玩家: {player_data}")
     return (
         jsonify({"ok": True, "data": player_data}),
         200,
@@ -110,6 +111,7 @@ def api_players_remove_delete(pid):
             500,
         )
 
+    players_log.info(f"已删除玩家: {pid}")
     return (
         jsonify({"ok": True}),
         200,
