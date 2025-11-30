@@ -9,35 +9,37 @@
             </n-button>
           </template>
 
-          <div class="container flex-column mb-4">
-            <section class="row my-2">
-              <div class="col-12 mb-2">
-                <strong>{{ t("local.selectGameTitle") }}</strong>
-              </div>
-              <div class="col-12">
-                <n-select
-                  v-model:value="gameId"
-                  :options="gameOptions"
-                  :placeholder="t('local.selectPlaceholder')"
-                />
-              </div>
-            </section>
+          <n-spin :show="loading">
+            <div class="container flex-column mb-4">
+              <section class="row my-2">
+                <div class="col-12 mb-2">
+                  <strong>{{ t("local.selectGameTitle") }}</strong>
+                </div>
+                <div class="col-12">
+                  <n-select
+                    v-model:value="gameId"
+                    :options="gameOptions"
+                    :placeholder="t('local.selectPlaceholder')"
+                  />
+                </div>
+              </section>
 
-            <section class="row my-2">
-              <div class="col-12 mb-2">
-                <strong>{{ t("local.selectPlayersTitle") }}</strong>
-              </div>
-              <div class="col-12">
-                <n-transfer
-                  v-model:value="selectedPlayerIds"
-                  :options="transferOptions"
-                  :render-source-list="renderSourceList"
-                  source-filterable
-                  target-filterable
-                />
-              </div>
-            </section>
-          </div>
+              <section class="row my-2">
+                <div class="col-12 mb-2">
+                  <strong>{{ t("local.selectPlayersTitle") }}</strong>
+                </div>
+                <div class="col-12">
+                  <n-transfer
+                    v-model:value="selectedPlayerIds"
+                    :options="transferOptions"
+                    :render-source-list="renderSourceList"
+                    source-filterable
+                    target-filterable
+                  />
+                </div>
+              </section>
+            </div>
+          </n-spin>
         </n-card>
       </div>
     </div>
@@ -47,9 +49,10 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, h, inject } from "vue";
 import { useI18n } from "vue-i18n";
-import { NCard, NSelect, NButton, NTransfer, NTree } from "naive-ui";
+import { NCard, NSelect, NButton, NTransfer, NTree, NSpin } from "naive-ui";
 import type { TransferRenderSourceList, TreeOption } from "naive-ui";
 import * as playerService from "@/services/players";
+import * as gameService from "@/services/games";
 import type { Socket } from "socket.io-client";
 
 const { t } = useI18n();
@@ -57,6 +60,7 @@ const socket = inject<Socket>("socket");
 const connected = ref(false);
 const started = ref(false);
 const gameId = ref("");
+const loading = ref(true);
 
 const games = ref<string[]>([]);
 const selectedPlayerIds = ref<string[]>([]);
@@ -148,15 +152,6 @@ const gameOptions = computed(() =>
   games.value.map((g) => ({ label: g, value: g }))
 );
 
-// TODO 载入游戏
-async function getGames() {
-  const r = await fetch("/api/games");
-  if (r.ok) {
-    const data = await r.json();
-    games.value = data.data;
-  }
-}
-
 function start() {
   if (socket) {
     connected.value = true;
@@ -167,15 +162,30 @@ function start() {
     started.value = true;
     // 随机生成页面url
     const gameUrl = `/gaming/${Math.random().toString(36).substring(2, 6)}`;
-    alert(gameUrl);
+    alert(
+      gameUrl +
+        "?gameId=" +
+        gameId.value +
+        "&playerIds=" +
+        selectedPlayerIds.value.join("+")
+    );
     // TODO 完善游戏页面逻辑
   } else {
     console.error("socket 未连接");
   }
 }
 
+// TODO 载入游戏
 onMounted(async () => {
-  getGames();
-  players.value = await playerService.getPlayers();
+  try {
+    const [loadedGames, loadedPlayers] = await Promise.all([
+      gameService.getGames(),
+      playerService.getPlayers(),
+    ]);
+    games.value = loadedGames;
+    players.value = loadedPlayers;
+  } finally {
+    loading.value = false;
+  }
 });
 </script>
