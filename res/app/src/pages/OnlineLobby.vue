@@ -52,12 +52,6 @@ onMounted(() => {
     socket.on("disconnect", () => {
       socketConnected.value = false;
     });
-    socket.on("server:ready", () => {
-      socketConnected.value = true;
-    });
-    socket.on("server:pong", (data: any) => {
-      lastPong.value = data;
-    });
   }
 });
 
@@ -65,8 +59,6 @@ onUnmounted(() => {
   if (socket) {
     socket.off("connect");
     socket.off("disconnect");
-    socket.off("server:ready");
-    socket.off("server:pong");
   }
 });
 </script>

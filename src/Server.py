@@ -57,3 +57,8 @@ def serve_static(path):
 def on_connect():
     log.info("客户端已连接")
     emit("server:ready", {"ok": True})
+
+
+@socketio.on("disconnect")
+def on_disconnect():
+    log.info("客户端已断开")
