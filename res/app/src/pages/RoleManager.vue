@@ -8,73 +8,75 @@
               {{ t("role.addRole") }}
             </n-button>
           </template>
-          <div class="container flex-column mb-4">
-            <section class="row my-2">
-              <div class="col-12 mb-2">
-                <strong>{{ t("role.sections.human") }}</strong>
-              </div>
-              <div class="col-12">
-                <div v-if="players.human.length === 0">
-                  <n-card size="small" :title="t('role.empty')" />
+          <n-spin :show="loading">
+            <div class="container flex-column mb-4">
+              <section class="row my-2">
+                <div class="col-12 mb-2">
+                  <strong>{{ t("role.sections.human") }}</strong>
                 </div>
-                <div v-else v-for="p in players.human" :key="p.uuid">
-                  <n-card
-                    closable
-                    class="mb-1"
-                    size="small"
-                    :title="p.name"
-                    @close="handleRemovePlayer(p.uuid)"
-                  >
-                    <div class="text-truncate">{{ p.prefixPrompt }}</div>
-                  </n-card>
+                <div class="col-12">
+                  <div v-if="players.human.length === 0">
+                    <n-card size="small" :title="t('role.empty')" />
+                  </div>
+                  <div v-else v-for="p in players.human" :key="p.uuid">
+                    <n-card
+                      closable
+                      class="mb-1"
+                      size="small"
+                      :title="p.name"
+                      @close="handleRemovePlayer(p.uuid)"
+                    >
+                      <div class="text-truncate">{{ p.prefixPrompt }}</div>
+                    </n-card>
+                  </div>
                 </div>
-              </div>
-            </section>
+              </section>
 
-            <section class="row my-2">
-              <div class="col-12 mb-2">
-                <strong>{{ t("role.modal.type.online") }}</strong>
-              </div>
-              <div class="col-12">
-                <div v-if="players.online.length === 0">
-                  <n-card size="small" :title="t('role.empty')" />
+              <section class="row my-2">
+                <div class="col-12 mb-2">
+                  <strong>{{ t("role.modal.type.online") }}</strong>
                 </div>
-                <div v-else v-for="p in players.online" :key="p.uuid">
-                  <n-card
-                    closable
-                    class="mb-1"
-                    size="small"
-                    :title="p.name"
-                    @close="handleRemovePlayer(p.uuid)"
-                  >
-                    {{ providerName(p.providerId) }} - {{ p.model }}
-                  </n-card>
+                <div class="col-12">
+                  <div v-if="players.online.length === 0">
+                    <n-card size="small" :title="t('role.empty')" />
+                  </div>
+                  <div v-else v-for="p in players.online" :key="p.uuid">
+                    <n-card
+                      closable
+                      class="mb-1"
+                      size="small"
+                      :title="p.name"
+                      @close="handleRemovePlayer(p.uuid)"
+                    >
+                      {{ providerName(p.providerId) }} - {{ p.model }}
+                    </n-card>
+                  </div>
                 </div>
-              </div>
-            </section>
+              </section>
 
-            <section class="row my-2">
-              <div class="col-12 mb-2">
-                <strong>{{ t("role.modal.type.local") }}</strong>
-              </div>
-              <div class="col-12">
-                <div v-if="players.local.length === 0">
-                  <n-card size="small" :title="t('role.empty')" />
+              <section class="row my-2">
+                <div class="col-12 mb-2">
+                  <strong>{{ t("role.modal.type.local") }}</strong>
                 </div>
-                <div v-else v-for="p in players.local" :key="p.uuid">
-                  <n-card
-                    closable
-                    class="mb-1"
-                    size="small"
-                    :title="p.name"
-                    @close="handleRemovePlayer(p.uuid)"
-                  >
-                    {{ p.modelPath }}
-                  </n-card>
+                <div class="col-12">
+                  <div v-if="players.local.length === 0">
+                    <n-card size="small" :title="t('role.empty')" />
+                  </div>
+                  <div v-else v-for="p in players.local" :key="p.uuid">
+                    <n-card
+                      closable
+                      class="mb-1"
+                      size="small"
+                      :title="p.name"
+                      @close="handleRemovePlayer(p.uuid)"
+                    >
+                      {{ p.modelPath }}
+                    </n-card>
+                  </div>
                 </div>
-              </div>
-            </section>
-          </div>
+              </section>
+            </div>
+          </n-spin>
         </n-card>
 
         <n-modal
@@ -204,12 +206,14 @@ import {
   NSelect,
   NInput,
   NFlex,
+  NSpin,
 } from "naive-ui";
 import * as playerService from "@/services/players";
 
 const { t } = useI18n();
 const debugMode = true;
 
+const loading = ref(true);
 const players = ref<playerService.AllPlayers>({
   human: [],
   online: [],
@@ -342,7 +346,11 @@ async function handleRemovePlayer(pid: string) {
 }
 
 onMounted(async () => {
-  providers.value = await playerService.getProviders();
-  players.value = await playerService.getPlayers();
+  try {
+    providers.value = await playerService.getProviders();
+    players.value = await playerService.getPlayers();
+  } finally {
+    loading.value = false;
+  }
 });
 </script>
