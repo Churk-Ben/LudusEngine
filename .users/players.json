@@ -1,14 +1,14 @@
 {
   "human": [
     {
-      "id": "initial",
+      "uuid": "initial",
       "name": "Churk",
       "prefixPrompt": "大家好我是渣渣灰, 是兄弟就来砍我! "
     }
   ],
   "online": [
     {
-      "id": "uidfagbvi",
+      "uuid": "uidfagbvi",
       "name": "哈基米",
       "providerId": "gemini",
       "model": "gemini-2.5-pro",
@@ -17,8 +17,8 @@
   ],
   "local": [
     {
-      "id": "difyugaiouer",
-      "modelName": "test",
+      "uuid": "difyugaiouer",
+      "name": "test",
       "modelPath": "E:\\Models\\",
       "parameters": ""
     }

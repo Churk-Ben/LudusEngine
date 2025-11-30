@@ -1,3 +1,9 @@
+# ------------------------------
+# @author: Churk
+# @description: 日志模块
+# @completed
+# ------------------------------
+
 import functools
 import inspect
 import logging
