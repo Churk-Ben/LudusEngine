@@ -1,0 +1,21 @@
+// e1 简单变量声明和赋值
+
+num(a) { 1 }
+num(pi) { 3.14 }
+str(name) { "Ludus" }
+bool(flag) { true }
+
+num(b) {}
+str(c) {}
+bool(d) {}
+
+obj("Test", 1) {
+    name = "LuduScript"
+    num(version) { 1.0 }
+    flag = false
+
+    a = 10
+    b = 20
+    c = "Hello"
+    d = true
+}
