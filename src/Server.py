@@ -12,7 +12,7 @@ BASE = Path(__file__).resolve().parent.parent
 STATIC_DIR = BASE / "res" / "app" / "static"
 
 # 初始化日志
-log = get_logger("Server")
+log = get_logger("MainServer")
 
 # 加载配置
 config = load_config()

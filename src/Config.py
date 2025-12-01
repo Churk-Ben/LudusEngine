@@ -7,7 +7,7 @@ BASE = Path(__file__).resolve().parent.parent
 CONFIG_FILE = BASE / "config.yaml"
 ENVIRN_FILE = BASE / ".env"
 
-log = get_logger("Config")
+log = get_logger("ConfigLoader")
 
 
 def load_config():
