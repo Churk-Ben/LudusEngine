@@ -68,6 +68,24 @@ def on_connect():
     emit("server:ready", {"ok": True})
 
 
+@socketio.on("app:initGame")
+@log.decorate.info("初始化游戏请求")
+def on_init_game(data):
+    game_id = data.get("gameId")
+    player_ids = data.get("playerIds")
+    session_id = data.get("sessionId")
+
+    log.info(
+        f"收到游戏初始化请求 - Session: {session_id}, Game: {game_id}, Players: {player_ids}"
+    )
+
+    # 回复客户端
+    emit(
+        "game:notification",
+        {"type": "success", "content": f"游戏 {game_id} 初始化中..."},
+    )
+
+
 @socketio.on("disconnect")
 def on_disconnect():
     global connected_client_sid

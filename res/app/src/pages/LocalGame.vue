@@ -48,14 +48,24 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, h, inject } from "vue";
+import { useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
-import { NCard, NSelect, NButton, NTransfer, NTree, NSpin } from "naive-ui";
+import {
+  NCard,
+  NSelect,
+  NButton,
+  NTransfer,
+  NTree,
+  NSpin,
+  useMessage,
+} from "naive-ui";
 import type { TransferRenderSourceList, TreeOption } from "naive-ui";
 import * as playerService from "@/services/players";
 import * as gameService from "@/services/games";
 import type { Socket } from "socket.io-client";
 
 const { t } = useI18n();
+const router = useRouter();
 const socket = inject<Socket>("socket");
 const connected = ref(false);
 const started = ref(false);
@@ -155,21 +165,17 @@ const gameOptions = computed(() =>
 function start() {
   if (socket) {
     connected.value = true;
+    const sessionId = Math.random().toString(36).substring(2, 6);
+
     socket.emit("app:initGame", {
       gameId: gameId.value,
       playerIds: selectedPlayerIds.value,
+      sessionId: sessionId,
     });
     started.value = true;
-    // 随机生成页面url
-    const gameUrl = `/gaming/${Math.random().toString(36).substring(2, 6)}`;
-    alert(
-      gameUrl +
-        "?gameId=" +
-        gameId.value +
-        "&playerIds=" +
-        selectedPlayerIds.value.join("+")
-    );
-    // TODO 完善游戏页面逻辑
+
+    // 跳转到游戏页面
+    router.push(`/gaming/${sessionId}`);
   } else {
     console.error("socket 未连接");
   }
