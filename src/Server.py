@@ -1,10 +1,11 @@
-from flask import Flask, send_from_directory, jsonify
+from flask import Flask, send_from_directory, jsonify, request
 from flask_cors import CORS
 from flask_socketio import SocketIO, emit
 from pathlib import Path
+import os
+import signal
 
 from .Logger import get_logger
-from .Config import load_config
 from .services.games import games_bp
 from .services.players import players_bp
 
@@ -14,9 +15,8 @@ STATIC_DIR = BASE / "res" / "app" / "static"
 # 初始化日志
 log = get_logger("MainServer")
 
-# 加载配置
-config = load_config()
-
+# 用于跟踪已连接的客户端
+connected_client_sid = None
 
 # 初始化Flask应用
 app = Flask(
@@ -33,6 +33,10 @@ socketio = SocketIO(
 
 app.register_blueprint(games_bp)
 app.register_blueprint(players_bp)
+
+
+# 全局变量，用于跟踪已连接的客户端
+connected_client_sid = None
 
 
 @app.get("/")
@@ -55,10 +59,21 @@ def serve_static(path):
 @socketio.on("connect")
 @log.decorate.info("捕获到链接请求")
 def on_connect():
-    log.info("客户端已连接")
+    global connected_client_sid
+    if connected_client_sid is not None:
+        log.warning(f"拒绝新的客户端连接, 因为已有连接: {connected_client_sid}")
+        return False  # 拒绝连接
+    connected_client_sid = request.sid
+    log.info(f"客户端已连接, 会话ID: {connected_client_sid}")
     emit("server:ready", {"ok": True})
 
 
 @socketio.on("disconnect")
 def on_disconnect():
-    log.info("客户端已断开")
+    global connected_client_sid
+    if request.sid == connected_client_sid:
+        log.info(f"客户端 {request.sid} 已断开, 正在关闭服务器...")
+        connected_client_sid = None
+        os.kill(os.getpid(), signal.SIGINT)
+    else:
+        log.warning(f"一个未被追踪的客户端 {request.sid} 已断开.")

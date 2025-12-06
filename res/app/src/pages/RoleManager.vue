@@ -250,11 +250,7 @@ function closeCreate() {
 }
 
 function resetForm() {
-  if (players.value.human.length === 0) {
-    createType.value = "human";
-  } else {
-    createType.value = "online";
-  }
+  createType.value = "human";
   roleName.value = "";
   providerId.value = "";
   modelName.value = "";

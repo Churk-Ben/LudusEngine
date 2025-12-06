@@ -1,38 +1,4 @@
-debug: true
-
 app:
-    name: Werewolf of Deepseeks
+    name: LudusEngine
     author: Churk_Ben
-    version: 2.1
-
-# 本地服务器配置
-web:
-    enable: true
-    host: 127.0.0.1
-    port: 5000
-
-# 玩家配置
-players:
-    - name: Aurore
-      human: false
-      model: moonshot/kimi-k2-0905-preview
-
-    - name: Bob
-      human: false
-      model: moonshot/kimi-k2-0905-preview
-
-    - name: Churk
-      human: false
-      model: moonshot/kimi-thinking-preview
-
-    - name: David
-      human: false
-      model: deepseek/deepseek-reasoner
-
-    - name: Eve
-      human: false
-      model: deepseek/deepseek-chat
-
-    - name: Frank
-      human: false
-      model: deepseek/deepseek-reasoner
+    version: 1.1
