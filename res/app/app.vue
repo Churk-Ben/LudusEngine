@@ -39,7 +39,9 @@
           </div>
         </n-layout-sider>
         <n-layout-content class="app-content" content-style="min-height: 0;">
-          <RouterView />
+          <n-message-provider placement="bottom-right">
+            <RouterView />
+          </n-message-provider>
         </n-layout-content>
       </n-layout>
     </div>
@@ -63,6 +65,7 @@ import {
   NLayoutContent,
   NLayoutSider,
   NMenu,
+  NMessageProvider,
   zhCN,
 } from "naive-ui";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
