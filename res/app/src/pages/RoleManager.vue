@@ -211,7 +211,6 @@ import {
 import * as playerService from "@/services/players";
 
 const { t } = useI18n();
-const debugMode = true;
 
 const loading = ref(true);
 const players = ref<playerService.AllPlayers>({
@@ -262,21 +261,20 @@ function resetForm() {
 
 const canCreate = computed(() => {
   if (createType.value === "human") {
-    return !!roleName.value.trim() || debugMode === true;
+    return !!roleName.value.trim();
   }
   if (createType.value === "online") {
     return (
-      (!!roleName.value.trim() &&
-        !!providerId.value &&
-        !!modelName.value.trim() &&
-        !!apiKey.value.trim()) ||
-      debugMode === true
+      !!roleName.value.trim() &&
+      !!providerId.value &&
+      !!modelName.value.trim() &&
+      !!apiKey.value.trim()
     );
   }
   if (createType.value === "local") {
     const path = modelPath.value.trim();
     const isAbs = /^[a-zA-Z]:[\\/]/.test(path) || path.startsWith("/");
-    return (!!roleName.value.trim() && isAbs) || debugMode === true;
+    return !!roleName.value.trim() && isAbs;
   }
   return false;
 });
