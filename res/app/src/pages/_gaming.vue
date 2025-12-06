@@ -1,16 +1,9 @@
 <template>
-  <div
-    class="gaming-page"
-    style="height: 100%; display: flex; flex-direction: row; overflow: hidden"
-  >
+  <div class="gaming-page">
     <!-- Left Column: Game Header & Messages -->
-    <div style="flex: 1; display: flex; flex-direction: column; min-width: 0">
+    <div class="gaming-left-column" style="">
       <!-- Top Header: Game Name & Status -->
-      <n-card
-        size="small"
-        :bordered="false"
-        style="border-bottom: 1px solid var(--n-border-color)"
-      >
+      <n-card size="small">
         <n-page-header>
           <template #title>
             {{ gameInfo.name }}
@@ -24,16 +17,16 @@
       </n-card>
 
       <!-- Message Container -->
-      <div class="message-container" style="flex: 1; min-height: 0">
+      <div class="message-container">
         <n-scrollbar style="height: 100%" content-style="padding: 16px;">
           <n-list :bordered="false">
             <n-list-item v-for="(msg, index) in messages" :key="index">
               <div class="message-item">
                 <n-thing :title="msg.sender">
                   <template #description>
-                    <span style="font-size: 12px; opacity: 0.8">{{
-                      msg.time
-                    }}</span>
+                    <span style="font-size: 12px; opacity: 0.8">
+                      {{ msg.time }}
+                    </span>
                   </template>
                   {{ msg.content }}
                 </n-thing>
@@ -44,38 +37,29 @@
       </div>
 
       <!-- Bottom: Input Area -->
-      <div style="padding: 16px; border-top: 1px solid var(--n-border-color)">
-        <n-input-group>
-          <n-input
-            v-model:value="inputValue"
-            type="text"
-            placeholder="输入消息..."
-            @keyup.enter="sendMessage"
-          />
-          <n-button
-            type="primary"
-            @click="sendMessage"
-            :disabled="!inputValue.trim()"
-          >
-            发送
-          </n-button>
-        </n-input-group>
+      <div class="input-container gap-2 mb-1">
+        <n-input
+          v-model:value="inputValue"
+          size="large"
+          type="text"
+          placeholder="输入消息..."
+          @keyup.enter="sendMessage"
+        />
+        <n-button
+          type="primary"
+          size="large"
+          @click="sendMessage"
+          :disabled="!inputValue.trim()"
+        >
+          {{ $t("发送") }}
+        </n-button>
       </div>
     </div>
 
     <!-- Right Column: Player List -->
-    <div
-      style="
-        width: 300px;
-        height: 100%;
-        border-left: 1px solid var(--n-border-color);
-        display: flex;
-        flex-direction: column;
-      "
-    >
+    <div class="gaming-right-column">
       <n-card
         title="玩家列表"
-        :bordered="false"
         style="height: 100%"
         content-style="padding: 0; overflow-y: auto;"
         header-style="padding: 16px; border-bottom: 1px solid var(--n-border-color);"
@@ -265,6 +249,35 @@ function sendMessage() {
 
 <style scoped>
 .gaming-page {
-  background-color: var(--n-color);
+  height: 100%;
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
+}
+
+.gaming-left-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  margin-right: 12px;
+}
+
+.gaming-right-column {
+  width: 300px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.message-container {
+  flex: 1;
+  min-height: 0;
+}
+
+.input-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
 }
 </style>
