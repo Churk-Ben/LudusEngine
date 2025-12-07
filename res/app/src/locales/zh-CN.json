@@ -93,7 +93,11 @@
   "online": {
     "title": "联机游戏",
     "lobbyTitle": "联机大厅",
-    "notOpen": "暂不开放"
+    "notOpen": "暂不开放",
+    "testInfo": "这是一条信息消息",
+    "testSuccess": "这是一条成功消息",
+    "testWarning": "这是一条警告消息",
+    "testError": "这是一条错误消息"
   },
   "game": {
     "title": "游戏",
@@ -104,6 +108,7 @@
     },
     "flow": {
       "title": "流程"
-    }
+    },
+    "players": "玩家列表"
   }
 }

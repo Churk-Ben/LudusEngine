@@ -93,7 +93,11 @@
   "online": {
     "title": "オンラインゲーム",
     "lobbyTitle": "オンラインロビー",
-    "notOpen": "まだ利用できません"
+    "notOpen": "まだ利用できません",
+    "testInfo": "これは情報メッセージです",
+    "testSuccess": "これは成功メッセージです",
+    "testWarning": "これは警告メッセージです",
+    "testError": "これはエラーメッセージです"
   },
   "game": {
     "title": "ゲーム",
@@ -104,6 +108,7 @@
     },
     "flow": {
       "title": "流れ"
-    }
+    },
+    "players": "プレイヤー"
   }
 }

@@ -22,8 +22,8 @@
                 <n-button @click="$router.push('/local')">
                   {{ t("local.title") }}
                 </n-button>
-                <n-button @click="testErr">
-                  {{ t("online.testErr") }}
+                <n-button @click="test">
+                  {{ t("online.testInfo") }}
                 </n-button>
               </n-space>
             </template>
@@ -55,7 +55,7 @@ const renderMessage: MessageRenderMessage = (props) => {
       closable: props.closable,
       onClose: props.onClose,
       type: type === "loading" ? "default" : type,
-      title: "你看你手上拿的是什么啊",
+      title: t("online.lobbyTitle"),
       style: {
         boxShadow: "var(--n-box-shadow)",
         maxWidth: "calc(100vw - 32px)",
@@ -70,23 +70,23 @@ const renderMessage: MessageRenderMessage = (props) => {
 
 const { info, success, warning, error } = useMessage();
 
-function testErr() {
-  info("这是一个信息提示", {
+function test() {
+  info(t("online.testInfo"), {
     render: renderMessage,
     closable: true,
   });
 
-  success("这是一个成功提示", {
+  success(t("online.testSuccess"), {
     render: renderMessage,
     closable: true,
   });
 
-  warning("这是一个警告提示", {
+  warning(t("online.testWarning"), {
     render: renderMessage,
     closable: true,
   });
 
-  error("这是一个错误提示", {
+  error(t("online.testError"), {
     render: renderMessage,
     closable: true,
   });

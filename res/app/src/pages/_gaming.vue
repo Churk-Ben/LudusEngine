@@ -1,8 +1,8 @@
 <template>
   <div class="gaming-page">
-    <!-- Left Column: Game Header & Messages -->
-    <div class="gaming-left-column" style="">
-      <!-- Top Header: Game Name & Status -->
+    <!-- 左列: 游戏标题和消息收发容器 -->
+    <div class="gaming-left-column">
+      <!-- 顶部标题: 游戏名称和状态 -->
       <n-card size="small">
         <n-page-header>
           <template #title>
@@ -16,7 +16,7 @@
         </n-page-header>
       </n-card>
 
-      <!-- Message Container -->
+      <!-- 消息容器 -->
       <div class="message-container">
         <n-scrollbar style="height: 100%" content-style="padding: 16px;">
           <n-list :bordered="false">
@@ -36,13 +36,13 @@
         </n-scrollbar>
       </div>
 
-      <!-- Bottom: Input Area -->
+      <!-- 底部: 输入区域 -->
       <div class="input-container gap-2 mb-1">
         <n-input
           v-model:value="inputValue"
           size="large"
           type="text"
-          placeholder="输入消息..."
+          :placeholder="t('game.chat.inputPlaceholder')"
           @keyup.enter="sendMessage"
         />
         <n-button
@@ -51,15 +51,15 @@
           @click="sendMessage"
           :disabled="!inputValue.trim()"
         >
-          {{ $t("发送") }}
+          {{ t("game.chat.send") }}
         </n-button>
       </div>
     </div>
 
-    <!-- Right Column: Player List -->
+    <!-- 右列: 玩家列表 -->
     <div class="gaming-right-column">
       <n-card
-        title="玩家列表"
+        :title="t('game.players')"
         style="height: 100%"
         content-style="padding: 0; overflow-y: auto;"
         header-style="padding: 16px; border-bottom: 1px solid var(--n-border-color);"
@@ -68,9 +68,9 @@
           <n-list-item v-for="player in players" :key="player.id">
             <n-thing>
               <template #avatar>
-                <n-avatar round size="small">{{
-                  player.name.charAt(0).toUpperCase()
-                }}</n-avatar>
+                <n-avatar round size="small">
+                  {{ player.name.charAt(0).toUpperCase() }}
+                </n-avatar>
               </template>
               <template #header>
                 {{ player.name }}
@@ -108,7 +108,6 @@ import {
   NThing,
   NAvatar,
   NInput,
-  NInputGroup,
   NButton,
   NScrollbar,
   NResult,
@@ -117,29 +116,21 @@ import {
 } from "naive-ui";
 import type { MessageRenderMessage } from "naive-ui";
 import type { Socket } from "socket.io-client";
+import {
+  type GameInfo,
+  type Player,
+  type ChatMessage,
+  type GameNotification,
+  joinGame,
+  leaveGame,
+  sendChatMessage,
+} from "@/services/games";
+import { useI18n } from "vue-i18n";
+const { t } = useI18n();
 
-// Types
-interface GameInfo {
-  name: string;
-  status: string;
-  statusType?: "default" | "success" | "warning" | "error" | "info";
-}
-
-interface Player {
-  id: string;
-  name: string;
-  status: string;
-}
-
-interface ChatMessage {
-  sender: string;
-  content: string;
-  time: string;
-}
-
-// State
+// 游戏信息: 名称和游戏阶段(?)
 const gameInfo = ref<GameInfo>({
-  name: "未连接游戏",
+  name: "游戏标题",
   status: "等待连接",
   statusType: "default",
 });
@@ -159,11 +150,11 @@ const renderMessage: MessageRenderMessage = (props) => {
       closable: props.closable,
       onClose: props.onClose,
       type: type === "loading" ? "default" : type,
-      title: "你看你手上拿的是什么啊", // Keep consistent with OnlineLobby.vue
+      title: "房间",
       style: {
         boxShadow: "var(--n-box-shadow)",
         maxWidth: "calc(100vw - 32px)",
-        width: "480px",
+        width: "300px",
       },
     },
     {
@@ -191,46 +182,38 @@ onMounted(() => {
     return;
   }
 
-  // 1. Game Info Update
-  socket.on("game:info", (data: GameInfo) => {
-    gameInfo.value = data;
-  });
-
-  // 2. Player List Update
-  socket.on("game:players", (data: Player[]) => {
-    players.value = data;
-  });
-
-  // 3. Incoming Message
-  socket.on("game:message", (data: ChatMessage) => {
-    messages.value.push(data);
-    // TODO: Scroll to bottom logic if needed
-  });
-
-  // 4. Error/Notification from server
-  socket.on("game:notification", (data: { type: string; content: string }) => {
-    switch (data.type) {
-      case "success":
-        showSuccess(data.content);
-        break;
-      case "warning":
-        showWarning(data.content);
-        break;
-      case "error":
-        showError(data.content);
-        break;
-      default:
-        showInfo(data.content);
-    }
+  joinGame(socket, {
+    onInfo: (data: GameInfo) => {
+      gameInfo.value = data;
+    },
+    onPlayers: (data: Player[]) => {
+      players.value = data;
+    },
+    onMessage: (data: ChatMessage) => {
+      messages.value.push(data);
+      // TODO: Scroll to bottom logic if needed
+    },
+    onNotification: (data: GameNotification) => {
+      switch (data.type) {
+        case "success":
+          showSuccess(data.content);
+          break;
+        case "warning":
+          showWarning(data.content);
+          break;
+        case "error":
+          showError(data.content);
+          break;
+        default:
+          showInfo(data.content);
+      }
+    },
   });
 });
 
 onUnmounted(() => {
   if (socket) {
-    socket.off("game:info");
-    socket.off("game:players");
-    socket.off("game:message");
-    socket.off("game:notification");
+    leaveGame(socket);
   }
 });
 
@@ -239,7 +222,7 @@ function sendMessage() {
   if (!inputValue.value.trim()) return;
 
   if (socket && socket.connected) {
-    socket.emit("game:chat", { content: inputValue.value });
+    sendChatMessage(socket, inputValue.value);
     inputValue.value = "";
   } else {
     showError("无法发送消息：Socket未连接");

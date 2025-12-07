@@ -93,7 +93,11 @@
   "online": {
     "title": "Online Game",
     "lobbyTitle": "Online Lobby",
-    "notOpen": "Not available yet"
+    "notOpen": "Not available yet",
+    "testInfo": "This is an information message",
+    "testSuccess": "This is a success message",
+    "testWarning": "This is a warning message",
+    "testError": "This is an error message"
   },
   "game": {
     "title": "Game",
@@ -104,6 +108,7 @@
     },
     "flow": {
       "title": "Flow"
-    }
+    },
+    "players": "Players List"
   }
 }
