@@ -20,6 +20,15 @@ if USERS_DIR.exists():
         players_store = json.load(f)
 
 
+# 根据uuid获取玩家数据
+def get_player_by_uuid(uuid: str):
+    for player_type in players_store:
+        for player in players_store[player_type]:
+            if player["uuid"] == uuid:
+                return player
+    return None
+
+
 @players_bp.route("/api/players", methods=["GET"])
 @players_log.decorate.info("拉取玩家列表")
 def api_players_get():

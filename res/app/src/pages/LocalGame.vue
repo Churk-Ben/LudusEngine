@@ -167,15 +167,15 @@ function start() {
     connected.value = true;
     const sessionId = Math.random().toString(36).substring(2, 6);
 
-    socket.emit("app:initGame", {
-      gameId: gameId.value,
-      playerIds: selectedPlayerIds.value,
-      sessionId: sessionId,
+    // 跳转到游戏页面
+    router.push({
+      path: `/gaming/${sessionId}`,
+      query: {
+        gameId: gameId.value,
+        playerIds: JSON.stringify(selectedPlayerIds.value),
+      },
     });
     started.value = true;
-
-    // 跳转到游戏页面
-    router.push(`/gaming/${sessionId}`);
   } else {
     console.error("socket 未连接");
   }

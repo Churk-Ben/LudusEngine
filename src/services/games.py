@@ -3,6 +3,7 @@ from pathlib import Path
 from flask_socketio import SocketIO, emit
 import datetime
 from ..Logger import get_logger
+from ..services.players import get_player_by_uuid
 
 BASE = Path(__file__).resolve().parent.parent.parent
 GAMES_DIR = BASE / ".games"
@@ -28,8 +29,8 @@ def api_games_get():
 
 
 def init_game_socket_events(socketio: SocketIO):
-    @socketio.on("app:initGame")
     @games_log.decorate.info("初始化游戏请求")
+    @socketio.on("app:initGame")
     def on_init_game(data):
         game_id = data.get("gameId")
         player_ids = data.get("playerIds")
@@ -39,40 +40,38 @@ def init_game_socket_events(socketio: SocketIO):
             f"收到游戏初始化请求 - Session: {session_id}, Game: {game_id}, Players: {player_ids}"
         )
 
-        # 模拟游戏状态
+        # 初始化游戏状态
         game_info = {
-            "name": game_id if game_id else "Unknown Game",
-            "status": "Running",
+            "name": game_id if game_id else "未命名",
+            "status": "已连接, 初始化中...",
             "statusType": "success",
         }
+        games_log.info(f"游戏会话 {session_id} 初始化游戏信息: {game_info}")
         emit("game:info", game_info)
 
-        # 模拟玩家列表
+        # 初始化玩家列表
         players = []
         if player_ids:
-            # 假设 player_ids 是列表
-            if isinstance(player_ids, list):
-                for pid in player_ids:
-                    players.append(
-                        {"id": str(pid), "name": f"Player {pid}", "status": "Ready"}
-                    )
-            else:
-                # 单个ID或者是字符串
+            for uuid in player_ids:
+                player = get_player_by_uuid(uuid)
                 players.append(
                     {
-                        "id": str(player_ids),
-                        "name": f"Player {player_ids}",
+                        "id": str(uuid),
+                        "name": player["name"] if player else f"Player {uuid}",
                         "status": "Ready",
+                        "data": {},
                     }
                 )
 
         emit("game:players", players)
+        games_log.info(f"游戏会话 {session_id} 初始化玩家列表: {players}")
 
         # 回复客户端
         emit(
             "game:notification",
             {"type": "success", "content": f"游戏 {game_id} 初始化成功"},
         )
+        games_log.info(f"游戏会话 {session_id} 初始化完成")
 
     @socketio.on("game:chat")
     def on_game_chat(data):
@@ -88,6 +87,7 @@ def init_game_socket_events(socketio: SocketIO):
 
         # 广播给所有人 (包括发送者)
         emit("game:message", msg, broadcast=True)
+        games_log.info(f"收到聊天消息: {msg}")
 
 
 if __name__ == "__main__":

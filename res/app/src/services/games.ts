@@ -10,10 +10,11 @@ export interface Player {
     id: string;
     name: string;
     status: string;
+    data?: any;
 }
 
 export interface ChatMessage {
-    sender: string; // SYSTEM
+    sender: string;
     content: string;
     time: string;
 }

@@ -126,7 +126,9 @@ import {
   sendChatMessage,
 } from "@/services/games";
 import { useI18n } from "vue-i18n";
+import { useRoute } from "vue-router";
 const { t } = useI18n();
+const route = useRoute();
 
 // 游戏信息: 名称和游戏阶段
 const gameInfo = ref<GameInfo>({
@@ -209,6 +211,24 @@ onMounted(() => {
       }
     },
   });
+
+  // 尝试初始化游戏（如果携带了参数）
+  const sessionId = route.params.id as string;
+  const qGameId = route.query.gameId as string;
+  const qPlayerIds = route.query.playerIds as string;
+
+  if (qGameId && qPlayerIds) {
+    try {
+      const pIds = JSON.parse(qPlayerIds);
+      socket.emit("app:initGame", {
+        gameId: qGameId,
+        playerIds: pIds,
+        sessionId: sessionId,
+      });
+    } catch (e) {
+      console.error("Parse playerIds error", e);
+    }
+  }
 });
 
 onUnmounted(() => {
