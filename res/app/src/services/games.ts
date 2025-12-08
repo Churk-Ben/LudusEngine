@@ -13,7 +13,7 @@ export interface Player {
 }
 
 export interface ChatMessage {
-    sender: string;
+    sender: string; // SYSTEM
     content: string;
     time: string;
 }
@@ -23,6 +23,7 @@ export interface GameNotification {
     content: string;
 }
 
+// 游戏回调函数接口
 export interface GameCallbacks {
     onInfo: (data: GameInfo) => void;
     onPlayers: (data: Player[]) => void;
@@ -63,6 +64,6 @@ export function leaveGame(socket: Socket) {
     socket.off("game:notification");
 }
 
-export function sendChatMessage(socket: Socket, content: string) {
-    socket.emit("game:chat", { content });
+export function sendChatMessage(socket: Socket, sender: string, content: string) {
+    socket.emit("game:chat", { "sender": sender, "content": content });
 }

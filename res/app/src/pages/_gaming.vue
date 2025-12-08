@@ -128,11 +128,11 @@ import {
 import { useI18n } from "vue-i18n";
 const { t } = useI18n();
 
-// 游戏信息: 名称和游戏阶段(?)
+// 游戏信息: 名称和游戏阶段
 const gameInfo = ref<GameInfo>({
   name: "游戏标题",
   status: "等待连接",
-  statusType: "default",
+  statusType: "info",
 });
 const players = ref<Player[]>([]);
 const messages = ref<ChatMessage[]>([]);
@@ -141,7 +141,7 @@ const inputValue = ref("");
 // Socket
 const socket = inject<Socket>("socket");
 
-// Message Provider Configuration (Reference from OnlineLobby.vue)
+// 应用消息通知
 const renderMessage: MessageRenderMessage = (props) => {
   const { type } = props;
   return h(
@@ -150,12 +150,12 @@ const renderMessage: MessageRenderMessage = (props) => {
       closable: props.closable,
       onClose: props.onClose,
       type: type === "loading" ? "default" : type,
-      title: "房间",
-      style: {
-        boxShadow: "var(--n-box-shadow)",
-        maxWidth: "calc(100vw - 32px)",
-        width: "300px",
-      },
+      title: "游戏通知",
+      // style: {
+      //   boxShadow: "var(--n-box-shadow)",
+      //   maxWidth: "calc(100vw - 32px)",
+      //   width: "300px",
+      // },
     },
     {
       default: () => props.content,
@@ -222,10 +222,10 @@ function sendMessage() {
   if (!inputValue.value.trim()) return;
 
   if (socket && socket.connected) {
-    sendChatMessage(socket, inputValue.value);
+    sendChatMessage(socket, "ME", inputValue.value);
     inputValue.value = "";
   } else {
-    showError("无法发送消息：Socket未连接");
+    showError("无法发送消息: Socket未连接");
   }
 }
 </script>

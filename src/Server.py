@@ -6,7 +6,7 @@ import os
 import signal
 
 from .Logger import get_logger
-from .services.games import games_bp
+from .services.games import games_bp, init_game_socket_events
 from .services.players import players_bp
 
 BASE = Path(__file__).resolve().parent.parent
@@ -30,6 +30,9 @@ socketio = SocketIO(
     cors_allowed_origins="*",
     async_mode="eventlet",
 )
+
+# 初始化游戏Socket事件
+init_game_socket_events(socketio)
 
 app.register_blueprint(games_bp)
 app.register_blueprint(players_bp)
@@ -66,24 +69,6 @@ def on_connect():
     connected_client_sid = request.sid
     log.info(f"客户端已连接, 会话ID: {connected_client_sid}")
     emit("server:ready", {"ok": True})
-
-
-@socketio.on("app:initGame")
-@log.decorate.info("初始化游戏请求")
-def on_init_game(data):
-    game_id = data.get("gameId")
-    player_ids = data.get("playerIds")
-    session_id = data.get("sessionId")
-
-    log.info(
-        f"收到游戏初始化请求 - Session: {session_id}, Game: {game_id}, Players: {player_ids}"
-    )
-
-    # 回复客户端
-    emit(
-        "game:notification",
-        {"type": "success", "content": f"游戏 {game_id} 初始化中..."},
-    )
 
 
 @socketio.on("disconnect")
