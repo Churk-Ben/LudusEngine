@@ -1,8 +1,8 @@
 import type { Socket } from "socket.io-client";
 
 export interface GameInfo {
-    name: string;
-    status: string;
+    name?: string;
+    status?: string;
     statusType?: "default" | "success" | "warning" | "error" | "info";
 }
 

@@ -186,7 +186,11 @@ onMounted(() => {
 
   joinGame(socket, {
     onInfo: (data: GameInfo) => {
-      gameInfo.value = data;
+      // 定向更新: 仅更新存在的字段
+      if (data.name !== undefined) gameInfo.value.name = data.name;
+      if (data.status !== undefined) gameInfo.value.status = data.status;
+      if (data.statusType !== undefined)
+        gameInfo.value.statusType = data.statusType;
     },
     onPlayers: (data: Player[]) => {
       players.value = data;

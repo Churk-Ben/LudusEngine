@@ -71,6 +71,7 @@ def init_game_socket_events(socketio: SocketIO):
             "game:notification",
             {"type": "success", "content": f"游戏 {game_id} 初始化成功"},
         )
+        emit("game:info", {"status": "等待游戏开始"})
         games_log.info(f"游戏会话 {session_id} 初始化完成")
 
     @socketio.on("game:chat")
