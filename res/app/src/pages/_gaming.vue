@@ -151,11 +151,11 @@ const renderMessage: MessageRenderMessage = (props) => {
       onClose: props.onClose,
       type: type === "loading" ? "default" : type,
       title: "游戏通知",
-      // style: {
-      //   boxShadow: "var(--n-box-shadow)",
-      //   maxWidth: "calc(100vw - 32px)",
-      //   width: "300px",
-      // },
+      style: {
+        width: "300px",
+        maxWidth: "calc(100vw - 32px)",
+        backdropFilter: "blur(10px)",
+      },
     },
     {
       default: () => props.content,

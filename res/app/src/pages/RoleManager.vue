@@ -87,96 +87,98 @@
           :style="{ width: '640px', maxWidth: '80vw', minHeight: '400px' }"
         >
           <div class="container">
-            <div class="row g-2">
-              <div class="col-12">
-                <n-flex justify="space-between">
-                  <label class="me-2 my-3" style="font-weight: bold">
-                    {{ t("role.modal.type.label") }}
-                  </label>
+            <n-spin :show="providersLoading">
+              <div class="row g-2">
+                <div class="col-12">
+                  <n-flex justify="space-between">
+                    <label class="me-2 my-3" style="font-weight: bold">
+                      {{ t("role.modal.type.label") }}
+                    </label>
 
-                  <n-radio-group class="mx-2 my-3" v-model:value="createType">
-                    <n-radio value="human">
-                      {{ t("role.modal.type.human") }}
-                    </n-radio>
-                    <n-radio value="online">
-                      {{ t("role.modal.type.online") }}
-                    </n-radio>
-                    <n-radio value="local">
-                      {{ t("role.modal.type.local") }}
-                    </n-radio>
-                  </n-radio-group>
-                </n-flex>
+                    <n-radio-group class="mx-2 my-3" v-model:value="createType">
+                      <n-radio value="human">
+                        {{ t("role.modal.type.human") }}
+                      </n-radio>
+                      <n-radio value="online">
+                        {{ t("role.modal.type.online") }}
+                      </n-radio>
+                      <n-radio value="local">
+                        {{ t("role.modal.type.local") }}
+                      </n-radio>
+                    </n-radio-group>
+                  </n-flex>
+                </div>
+
+                <template v-if="createType === 'human'">
+                  <div class="col-12">
+                    <n-input
+                      v-model:value="roleName"
+                      :placeholder="t('role.modal.fields.roleName')"
+                    />
+                  </div>
+                  <div class="col-12">
+                    <n-input
+                      v-model:value="prefixPrompt"
+                      type="textarea"
+                      :placeholder="t('role.modal.fields.prefixPrompt')"
+                      rows="5"
+                    />
+                  </div>
+                </template>
+
+                <template v-if="createType === 'online'">
+                  <div class="col-12">
+                    <n-input
+                      v-model:value="roleName"
+                      :placeholder="t('role.modal.fields.roleName')"
+                    />
+                  </div>
+                  <div class="col-12">
+                    <n-select
+                      v-model:value="providerId"
+                      :options="providerOptions"
+                      :placeholder="t('role.modal.fields.provider')"
+                    />
+                  </div>
+                  <div class="col-12">
+                    <n-input
+                      v-model:value="modelName"
+                      :placeholder="t('role.modal.fields.modelName')"
+                    />
+                  </div>
+                  <div class="col-12">
+                    <n-input
+                      v-model:value="apiKey"
+                      :placeholder="t('role.modal.fields.api')"
+                      type="password"
+                    />
+                  </div>
+                </template>
+
+                <template v-if="createType === 'local'">
+                  <div class="col-12">
+                    <n-input
+                      v-model:value="roleName"
+                      :placeholder="t('role.modal.fields.roleName')"
+                    />
+                  </div>
+                  <div class="col-12">
+                    <n-input
+                      v-model:value="modelPath"
+                      :placeholder="t('role.modal.fields.localPath')"
+                    />
+                  </div>
+                  <div class="col-12">
+                    <n-input
+                      v-model:value="parameters"
+                      type="textarea"
+                      :placeholder="t('role.modal.fields.parameters')"
+                      rows="3"
+                    />
+                  </div>
+                </template>
               </div>
-
-              <template v-if="createType === 'human'">
-                <div class="col-12">
-                  <n-input
-                    v-model:value="roleName"
-                    :placeholder="t('role.modal.fields.roleName')"
-                  />
-                </div>
-                <div class="col-12">
-                  <n-input
-                    v-model:value="prefixPrompt"
-                    type="textarea"
-                    :placeholder="t('role.modal.fields.prefixPrompt')"
-                    rows="5"
-                  />
-                </div>
-              </template>
-
-              <template v-if="createType === 'online'">
-                <div class="col-12">
-                  <n-input
-                    v-model:value="roleName"
-                    :placeholder="t('role.modal.fields.roleName')"
-                  />
-                </div>
-                <div class="col-12">
-                  <n-select
-                    v-model:value="providerId"
-                    :options="providerOptions"
-                    :placeholder="t('role.modal.fields.provider')"
-                  />
-                </div>
-                <div class="col-12">
-                  <n-input
-                    v-model:value="modelName"
-                    :placeholder="t('role.modal.fields.modelName')"
-                  />
-                </div>
-                <div class="col-12">
-                  <n-input
-                    v-model:value="apiKey"
-                    :placeholder="t('role.modal.fields.api')"
-                    type="password"
-                  />
-                </div>
-              </template>
-
-              <template v-if="createType === 'local'">
-                <div class="col-12">
-                  <n-input
-                    v-model:value="roleName"
-                    :placeholder="t('role.modal.fields.roleName')"
-                  />
-                </div>
-                <div class="col-12">
-                  <n-input
-                    v-model:value="modelPath"
-                    :placeholder="t('role.modal.fields.localPath')"
-                  />
-                </div>
-                <div class="col-12">
-                  <n-input
-                    v-model:value="parameters"
-                    type="textarea"
-                    :placeholder="t('role.modal.fields.parameters')"
-                    rows="3"
-                  />
-                </div>
-              </template>
-            </div>
+            </n-spin>
           </div>
           <template #footer>
             <n-flex justify="end">
@@ -195,7 +197,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { h, ref, computed, onMounted } from "vue";
 import { useI18n } from "vue-i18n";
 import {
   NCard,
@@ -207,6 +209,8 @@ import {
   NInput,
   NFlex,
   NSpin,
+  NAlert,
+  useMessage,
 } from "naive-ui";
 import * as playerService from "@/services/players";
 
@@ -219,6 +223,63 @@ const players = ref<playerService.AllPlayers>({
   local: [],
 });
 const providers = ref<playerService.LLMProvider[]>([]);
+const providersLoading = ref(false);
+
+// 消息提示
+const message = useMessage();
+import type { MessageRenderMessage } from "naive-ui";
+
+// 应用消息提示
+const renderMessage: MessageRenderMessage = (props) => {
+  const { type } = props;
+  return h(
+    NAlert,
+    {
+      closable: props.closable,
+      onClose: props.onClose,
+      type: type === "loading" ? "default" : type,
+      title: t("online.lobbyTitle"),
+      style: {
+        width: "300px",
+        maxWidth: "calc(100vw - 32px)",
+        backdropFilter: "blur(10px)",
+      },
+    },
+    {
+      default: () => props.content,
+    }
+  );
+};
+
+const { info, success, warning, error } = useMessage();
+
+function showInfo(msg: string) {
+  info(msg, {
+    render: renderMessage,
+    closable: true,
+  });
+}
+
+function showSuccess(msg: string) {
+  success(msg, {
+    render: renderMessage,
+    closable: true,
+  });
+}
+
+function showWarning(msg: string) {
+  warning(msg, {
+    render: renderMessage,
+    closable: true,
+  });
+}
+
+function showError(msg: string) {
+  error(msg, {
+    render: renderMessage,
+    closable: true,
+  });
+}
 
 // 模态框
 const showCreate = ref(false);
@@ -239,9 +300,20 @@ function providerName(id: string) {
   return providers.value.find((x) => x.id === id)?.name || id;
 }
 
-function openCreate() {
+async function openCreate() {
   resetForm();
   showCreate.value = true;
+
+  if (!providers.value.length) {
+    providersLoading.value = true;
+    try {
+      providers.value = await playerService.getProviders();
+    } catch (err) {
+      showError("Failed to load providers");
+    } finally {
+      providersLoading.value = false;
+    }
+  }
 }
 
 function closeCreate() {
@@ -312,7 +384,7 @@ async function doCreate() {
       };
       break;
     default:
-      console.error("Invalid create type");
+      showError("Invalid create type");
       return;
   }
 
@@ -341,7 +413,6 @@ async function handleRemovePlayer(pid: string) {
 
 onMounted(async () => {
   try {
-    providers.value = await playerService.getProviders();
     players.value = await playerService.getPlayers();
   } finally {
     loading.value = false;

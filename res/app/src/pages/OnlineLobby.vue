@@ -57,9 +57,9 @@ const renderMessage: MessageRenderMessage = (props) => {
       type: type === "loading" ? "default" : type,
       title: t("online.lobbyTitle"),
       style: {
-        boxShadow: "var(--n-box-shadow)",
+        width: "300px",
         maxWidth: "calc(100vw - 32px)",
-        width: "480px",
+        backdropFilter: "blur(10px)",
       },
     },
     {
