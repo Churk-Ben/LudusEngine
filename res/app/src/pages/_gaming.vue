@@ -18,8 +18,8 @@
 
       <!-- 消息容器 -->
       <div class="message-container">
-        <n-scrollbar style="height: 100%" content-style="padding: 16px;">
-          <n-list :bordered="false">
+        <n-scrollbar style="height: 100%">
+          <n-list>
             <n-list-item v-for="(msg, index) in messages" :key="index">
               <div class="message-item">
                 <n-thing :title="msg.sender">
@@ -65,7 +65,11 @@
         header-style="padding: 16px; border-bottom: 1px solid var(--n-border-color);"
       >
         <n-list hoverable clickable>
-          <n-list-item v-for="player in players" :key="player.id">
+          <n-list-item
+            v-for="player in players"
+            :key="player.id"
+            @click="detail(player)"
+          >
             <n-thing>
               <template #avatar>
                 <n-avatar round size="small">
@@ -80,7 +84,7 @@
               </template>
             </n-thing>
           </n-list-item>
-          <!-- Default Card if no players -->
+          <!-- 默认玩家卡片 -->
           <div v-if="players.length === 0" style="padding: 16px">
             <n-card embedded>
               <n-result
@@ -113,6 +117,8 @@ import {
   NResult,
   NAlert,
   useMessage,
+  useDialog,
+  NModal,
 } from "naive-ui";
 import type { MessageRenderMessage } from "naive-ui";
 import type { Socket } from "socket.io-client";
@@ -129,6 +135,7 @@ import { useI18n } from "vue-i18n";
 import { useRoute } from "vue-router";
 const { t } = useI18n();
 const route = useRoute();
+const socket = inject<Socket>("socket");
 
 // 游戏信息: 名称和游戏阶段
 const gameInfo = ref<GameInfo>({
@@ -139,9 +146,6 @@ const gameInfo = ref<GameInfo>({
 const players = ref<Player[]>([]);
 const messages = ref<ChatMessage[]>([]);
 const inputValue = ref("");
-
-// Socket
-const socket = inject<Socket>("socket");
 
 // 应用消息通知
 const renderMessage: MessageRenderMessage = (props) => {
@@ -166,8 +170,8 @@ const renderMessage: MessageRenderMessage = (props) => {
 };
 
 const message = useMessage();
+const dialog = useDialog();
 
-// Custom message methods
 const showInfo = (content: string) =>
   message.info(content, { render: renderMessage, closable: true });
 const showSuccess = (content: string) =>
@@ -177,7 +181,16 @@ const showWarning = (content: string) =>
 const showError = (content: string) =>
   message.error(content, { render: renderMessage, closable: true });
 
-// Socket Event Handlers
+// 展示玩家详情(玩家的data对象)
+function detail(player: Player) {
+  dialog.info({
+    title: "玩家详情",
+    content: JSON.stringify(player.data || {}, null, 2),
+    positiveText: "关闭",
+  });
+}
+
+// Socket 事件
 onMounted(() => {
   if (!socket) {
     showError("Socket未连接");
@@ -230,7 +243,7 @@ onMounted(() => {
         sessionId: sessionId,
       });
     } catch (e) {
-      console.error("Parse playerIds error", e);
+      showError("处理玩家ID时出错: " + e);
     }
   }
 });
