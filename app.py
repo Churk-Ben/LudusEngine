@@ -4,6 +4,12 @@ from src.Config import load_config
 import webbrowser
 import platform
 import os
+import threading
+
+try:
+    import webview
+except ImportError:
+    webview = None
 
 log = get_logger("APP")
 log.info("-" * 80)
@@ -53,11 +59,28 @@ def main():
             log.info("服务器已成功关闭")
 
     else:
-        open_browser_in_app_mode("http://localhost:5000")
-        try:
-            socketio.run(app, host="127.0.0.1", port=5000, debug=False)
-        except SystemExit:
-            log.info("服务器已成功关闭")
+        if webview:
+            log.info("检测到 pywebview, 启动桌面应用模式.")
+            # 启动服务器线程
+            t = threading.Thread(
+                target=lambda: socketio.run(
+                    app, host="127.0.0.1", port=5000, debug=False
+                )
+            )
+            t.daemon = True
+            t.start()
+
+            # 启动 webview
+            webview.create_window(
+                "Ludus Engine", "http://localhost:5000", width=1280, height=800
+            )
+            webview.start()
+        else:
+            open_browser_in_app_mode("http://localhost:5000")
+            try:
+                socketio.run(app, host="127.0.0.1", port=5000, debug=False)
+            except SystemExit:
+                log.info("服务器已成功关闭")
 
 
 if __name__ == "__main__":
