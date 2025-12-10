@@ -18,19 +18,22 @@
 
       <!-- 消息容器 -->
       <div class="message-container">
-        <n-scrollbar style="height: 100%">
-          <n-list>
-            <n-list-item v-for="(msg, index) in messages" :key="index">
-              <div class="message-item">
-                <n-thing :title="msg.sender">
-                  <template #description>
-                    <span style="font-size: 12px; opacity: 0.8">
-                      {{ msg.time }}
-                    </span>
-                  </template>
-                  {{ msg.content }}
-                </n-thing>
-              </div>
+        <n-scrollbar>
+          <n-list class="chat-list">
+            <n-list-item
+              v-for="(msg, index) in messages"
+              :key="index"
+              class="chat-item"
+            >
+              <div class="bubble">{{ msg.sender }}: {{ msg.content }}</div>
+              <!-- <n-thing class="my-1 px-2 py-1 rounded-md" :title="msg.sender">
+                <template #description>
+                  <span style="font-size: 12px; opacity: 0.8">
+                    {{ msg.time }}
+                  </span>
+                </template>
+                {{ msg.content }}
+              </n-thing> -->
             </n-list-item>
           </n-list>
         </n-scrollbar>
@@ -68,19 +71,28 @@
           <n-list-item
             v-for="player in players"
             :key="player.id"
-            @click="detail(player)"
+            @click="toggleDetail(player)"
           >
             <n-thing>
               <template #avatar>
                 <n-avatar round size="small">
+                  <!-- TODO 根据玩家data里的信息设置头像 -->
                   {{ player.name.charAt(0).toUpperCase() }}
                 </n-avatar>
               </template>
               <template #header>
                 {{ player.name }}
               </template>
-              <template #description>
+              <template #header-extra>
                 {{ player.status }}
+              </template>
+              <template #description>
+                <div v-if="expandedPlayerIds.includes(player.id)">
+                  {{ JSON.stringify(player.data || {}, null, 2) }}
+                </div>
+                <template v-else>
+                  <span>点按查看玩家数据</span>
+                </template>
               </template>
             </n-thing>
           </n-list-item>
@@ -117,8 +129,6 @@ import {
   NResult,
   NAlert,
   useMessage,
-  useDialog,
-  NModal,
 } from "naive-ui";
 import type { MessageRenderMessage } from "naive-ui";
 import type { Socket } from "socket.io-client";
@@ -170,7 +180,6 @@ const renderMessage: MessageRenderMessage = (props) => {
 };
 
 const message = useMessage();
-const dialog = useDialog();
 
 const showInfo = (content: string) =>
   message.info(content, { render: renderMessage, closable: true });
@@ -181,13 +190,16 @@ const showWarning = (content: string) =>
 const showError = (content: string) =>
   message.error(content, { render: renderMessage, closable: true });
 
-// 展示玩家详情(玩家的data对象)
-function detail(player: Player) {
-  dialog.info({
-    title: "玩家详情",
-    content: JSON.stringify(player.data || {}, null, 2),
-    positiveText: "关闭",
-  });
+const expandedPlayerIds = ref<string[]>([]);
+
+// 切换展示玩家详情(玩家的data对象)
+function toggleDetail(player: Player) {
+  const index = expandedPlayerIds.value.indexOf(player.id);
+  if (index > -1) {
+    expandedPlayerIds.value.splice(index, 1);
+  } else {
+    expandedPlayerIds.value.push(player.id);
+  }
 }
 
 // Socket 事件
@@ -293,11 +305,23 @@ function sendMessage() {
 .message-container {
   flex: 1;
   min-height: 0;
+  word-break: break-word;
+  line-height: 1.5;
 }
 
 .input-container {
   display: flex;
   flex-direction: row;
   align-items: center;
+}
+
+.chat-list {
+  margin: 8px 0;
+  padding: 0 12px;
+  border-radius: var(--n-border-radius);
+}
+
+.chat-item {
+  background-color: #cb0f0f;
 }
 </style>
