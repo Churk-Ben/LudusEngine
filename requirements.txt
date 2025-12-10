@@ -2,4 +2,6 @@ litellm
 Flask>=3.0.0
 flask-cors>=4.0.0
 flask-socketio>=5.3.0
+concurrent_log_handler>=0.9.0
+eventlet>=0.40.0
 pywebview
