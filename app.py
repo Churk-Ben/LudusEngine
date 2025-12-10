@@ -72,9 +72,23 @@ def main():
             t.start()
 
             # 启动 webview
-            webview.create_window(
-                "Ludus Engine", "http://localhost:5000", width=1280, height=800
+            window = webview.create_window(
+                "Ludus Engine",
+                "http://localhost:5000",
+                width=1280,
+                height=800,
+                zoomable=True,
             )
+
+            def apply_zoom():
+                # 默认Linux下缩放1.5倍，其他1.0，可通过环境变量ZOOM覆盖
+                default_zoom = "1.5" if platform.system() == "Linux" else "1.0"
+                zoom = os.getenv("ZOOM", default_zoom)
+                log.info(f"设置页面缩放级别: {zoom}")
+                # 注入CSS缩放
+                window.evaluate_js(f"document.body.style.zoom = '{zoom}'")
+
+            window.events.loaded += apply_zoom
             webview.start()
         else:
             open_browser_in_app_mode("http://localhost:5000")
