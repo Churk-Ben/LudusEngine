@@ -42,17 +42,6 @@ def open_browser_in_app_mode(url):
         log.info(f"非 Windows 系统, 直接打开浏览器.")
         webbrowser.open_new(url)
 
-def open_app_in_webview():
-    # 1. 后台线程跑 Flask-SocketIO
-    t = threading.Thread(target=lambda: socketio.run(app,host="127.0.0.1",port=5000,debug=False), daemon=True)
-    t.start()
-
-    # 2. 前台的 pywebview 窗口
-    webview.create_window('我的桌面应用',
-                          url='http://localhost:5000',
-                          width=1200, height=800,
-                          resizable=True)
-    webview.start()
 
 def browser_main():
     # 加载配置
@@ -100,5 +89,3 @@ if __name__ == "__main__":
     # def base_path(*p):
     #     return os.path.join(getattr(sys, '_MEIPASS', os.path.abspath('.')), *p)
     browser_main()
-
-
