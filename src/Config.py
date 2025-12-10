@@ -1,6 +1,8 @@
 from pathlib import Path
-import yaml
+
 from dotenv import load_dotenv
+import yaml
+
 from .Logger import get_logger
 
 BASE = Path(__file__).resolve().parent.parent

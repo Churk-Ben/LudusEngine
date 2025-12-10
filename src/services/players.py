@@ -1,7 +1,9 @@
 import json
-import uuid
-from flask import Blueprint, jsonify, request
 from pathlib import Path
+import uuid
+
+from flask import Blueprint, jsonify, request
+
 from ..Logger import get_logger
 
 

@@ -1,9 +1,10 @@
-from flask import Flask, send_from_directory, jsonify, request
+import os
+from pathlib import Path
+import signal
+
+from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 from flask_socketio import SocketIO, emit
-from pathlib import Path
-import os
-import signal
 
 from .Logger import get_logger
 from .services.games import games_bp, init_game_socket_events

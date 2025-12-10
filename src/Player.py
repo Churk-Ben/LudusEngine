@@ -1,7 +1,8 @@
 import os
 import random
+from typing import Dict, List, Optional
+
 from litellm import completion
-from typing import List, Dict, Optional
 
 from .Base import Player
 from .Config import load_config

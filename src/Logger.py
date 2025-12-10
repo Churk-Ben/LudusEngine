@@ -8,8 +8,9 @@ import functools
 import inspect
 import logging
 import os
-from concurrent_log_handler import ConcurrentRotatingFileHandler
 from pathlib import Path
+
+from concurrent_log_handler import ConcurrentRotatingFileHandler
 
 BASE = Path(__file__).resolve().parent.parent
 LOG_DIR = BASE / "logs"

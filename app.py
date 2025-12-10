@@ -1,11 +1,11 @@
-from ssl import socket_error
-from src.Server import app, socketio
-from src.Logger import get_logger
-from src.Config import load_config
-import webbrowser
-import platform
 import os
+import platform
 import threading
+import webbrowser
+
+from src.Config import load_config
+from src.Logger import get_logger
+from src.Server import app, socketio
 
 try:
     import webview
@@ -43,7 +43,7 @@ def open_browser_in_app_mode(url):
         webbrowser.open_new(url)
 
 
-def browser_main():
+def main():
     # 加载配置
     config = load_config()
     log.info(f"配置加载完成: {config}")
@@ -88,4 +88,4 @@ if __name__ == "__main__":
     # 打包后资源路径兼容
     # def base_path(*p):
     #     return os.path.join(getattr(sys, '_MEIPASS', os.path.abspath('.')), *p)
-    browser_main()
+    main()
