@@ -219,8 +219,5 @@ res/app/node_modules/
 res/app/static/
 res/app/.vite/
 
-.users/*
-!.users
+*.env
 
-.games/*
-!.games

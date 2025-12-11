@@ -17,7 +17,7 @@ from concurrent_log_handler import ConcurrentRotatingFileHandler
 BASE = Path(__file__).resolve().parent.parent
 LOG_DIR = BASE / "logs"
 GAMES_DIR = BASE / ".games"
-GAMES_LOG_DIR = GAMES_DIR / ".logs"
+GAMES_LOG_DIR = GAMES_DIR / "logs"
 DEFAULT_LOGFILE = LOG_DIR / "ludus.log"
 
 FORMATTER = logging.Formatter(
