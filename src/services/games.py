@@ -1,4 +1,5 @@
 import datetime
+import json
 import os
 from pathlib import Path
 
@@ -6,7 +7,7 @@ from flask import Blueprint, jsonify
 from flask_socketio import SocketIO, emit
 
 from ..Logger import get_logger
-from ..services.players import get_player_by_uuid
+from ..services.players import get_player_by_uuid, get_player_type_by_uuid
 
 BASE = Path(__file__).resolve().parent.parent.parent
 GAMES_DIR = BASE / ".games"
@@ -60,11 +61,12 @@ def init_game_socket_events(socketio: SocketIO):
         if player_ids:
             for uuid in player_ids:
                 player = get_player_by_uuid(uuid)
+                # TODO 完善远程玩家类型
                 players.append(
                     {
                         "id": str(uuid),
                         "name": player["name"] if player else f"Player {uuid}",
-                        "status": "Ready",
+                        "type": get_player_type_by_uuid(uuid) if player else "remote",
                         "data": {},
                     }
                 )
@@ -82,7 +84,7 @@ def init_game_socket_events(socketio: SocketIO):
 
     @socketio.on("game:chat")
     def on_game_chat(data):
-        sender = data.get("sender", "System")
+        sender = data.get("sender", None)
         content = data.get("content", "")
 
         # 构建消息对象
@@ -93,8 +95,9 @@ def init_game_socket_events(socketio: SocketIO):
         }
 
         # 广播给所有人 (包括发送者)
+        # TODO 这里暂时先广播给所有玩家，后续根据玩家类型筛选
         emit("game:message", msg, broadcast=True)
-        games_log.info(f"收到聊天消息: {msg}")
+        games_log.info(f"处理聊天消息: {msg}")
 
 
 if __name__ == "__main__":

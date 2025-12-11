@@ -15,14 +15,10 @@ if not USERS_DIR.exists():
     os.mkdir(USERS_DIR)
     players_file = USERS_DIR / "players.json"
     apikeys_file = USERS_DIR / "apikeys.env"
-    
-    with open(players_file,"w",encoding="UTF-8") as f:
-        init_players_file = {
-            "human": [],
-            "online": [],
-            "local": []
-        }
-        json.dump(init_players_file,f, ensure_ascii=False,indent=2)
+
+    with open(players_file, "w", encoding="UTF-8") as f:
+        init_players_file = {"human": [], "online": [], "local": []}
+        json.dump(init_players_file, f, ensure_ascii=False, indent=2)
 
 
 players_bp = Blueprint("players", __name__)
@@ -45,6 +41,15 @@ def get_player_by_uuid(uuid: str):
     return None
 
 
+# 根据uuid获取玩家类型
+def get_player_type_by_uuid(uuid: str):
+    for player_type in players_store:
+        for player in players_store[player_type]:
+            if player["uuid"] == uuid:
+                return player_type
+    return None
+
+
 @players_bp.route("/api/players", methods=["GET"])
 @players_log.decorate.info("拉取玩家列表")
 def api_players_get():
@@ -62,9 +67,11 @@ def api_players_providers_get():
     if os.getenv("debug", "0") == "1":
         players_log.info(f"已加载 1 个默认供应商")
         return (
-        jsonify({"ok": True, "data": [{'id': "default", 'name': 'default_provider'}]}),
-        200,
-    )
+            jsonify(
+                {"ok": True, "data": [{"id": "default", "name": "default_provider"}]}
+            ),
+            200,
+        )
 
     import litellm
 

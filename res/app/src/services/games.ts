@@ -9,12 +9,12 @@ export interface GameInfo {
 export interface Player {
     id: string;
     name: string;
-    status: string;
+    type: "human" | "online" | "local";
     data?: any;
 }
 
 export interface ChatMessage {
-    sender: string;
+    sender: Player;
     content: string;
     time: string;
 }
@@ -65,6 +65,6 @@ export function leaveGame(socket: Socket) {
     socket.off("game:notification");
 }
 
-export function sendChatMessage(socket: Socket, sender: string, content: string) {
+export function sendChatMessage(socket: Socket, sender: Player, content: string) {
     socket.emit("game:chat", { "sender": sender, "content": content });
 }

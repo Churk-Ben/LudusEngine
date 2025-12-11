@@ -25,8 +25,17 @@
               :key="index"
               class="chat-item"
             >
-              <n-thing :title="msg.sender">
-                <template #description>
+              <n-thing content-indented>
+                <template #avatar>
+                  <n-avatar round size="small">
+                    <!-- TODO 根据玩家data里的信息设置头像 msg 缺少sender信息 -->
+                    {{ msg.sender.name.charAt(0).toUpperCase() }}
+                  </n-avatar>
+                </template>
+                <template #header>
+                  {{ msg.sender.name }}
+                </template>
+                <template #header-extra>
                   <span style="font-size: 12px; opacity: 0.8">
                     {{ msg.time }}
                   </span>
@@ -83,7 +92,7 @@
                 {{ player.name }}
               </template>
               <template #header-extra>
-                {{ player.status }}
+                {{ player.type }}
               </template>
               <template #description>
                 <div v-if="expandedPlayerIds.includes(player.id)">
@@ -221,7 +230,11 @@ onMounted(() => {
     },
     onMessage: (data: ChatMessage) => {
       messages.value.push(data);
-      // TODO: Scroll to bottom logic if needed
+      // 滚动到最底部
+      const messageContainer = document.querySelector(".message-container");
+      if (messageContainer) {
+        messageContainer.scrollTop = messageContainer.scrollHeight;
+      }
     },
     onNotification: (data: GameNotification) => {
       switch (data.type) {
@@ -270,7 +283,11 @@ function sendMessage() {
   if (!inputValue.value.trim()) return;
 
   if (socket && socket.connected) {
-    sendChatMessage(socket, "ME", inputValue.value);
+    sendChatMessage(
+      socket,
+      players.value.find((p) => p.type === "human")!,
+      inputValue.value
+    );
     inputValue.value = "";
   } else {
     showError("无法发送消息: Socket未连接");
