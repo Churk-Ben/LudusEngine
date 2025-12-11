@@ -154,10 +154,15 @@ import {
   sendChatMessage,
 } from "@/services/games";
 import { useI18n } from "vue-i18n";
-import { useRoute } from "vue-router";
+import { useRoute, onBeforeRouteLeave } from "vue-router";
 const { t } = useI18n();
 const route = useRoute();
 const socket = inject<Socket>("socket");
+
+// 保存进入页面时的参数快照，防止在 onUnmounted 时 route 已变更导致获取不到
+const initialSessionId = route.params.id as string;
+const initialGameId = route.query.gameId as string;
+const initialPlayerIds = route.query.playerIds as string;
 
 // 游戏信息: 名称和游戏阶段
 const gameInfo = ref<GameInfo>({
@@ -209,6 +214,24 @@ const showWarning = (content: string) =>
   message.warning(content, { render: renderMessage, closable: true });
 const showError = (content: string) =>
   message.error(content, { render: renderMessage, closable: true });
+
+// 离开页面拦截
+const canLeave = ref(false);
+let leaveTimer: ReturnType<typeof setTimeout> | null = null;
+
+onBeforeRouteLeave(() => {
+  if (canLeave.value) return true;
+
+  showWarning("切换页面将不会为你保存游戏进度, 通知消失前再次点击以切换页面");
+  canLeave.value = true;
+
+  if (leaveTimer) clearTimeout(leaveTimer);
+  leaveTimer = setTimeout(() => {
+    canLeave.value = false;
+  }, 3000);
+
+  return false;
+});
 
 const expandedPlayerIds = ref<string[]>([]);
 
@@ -269,17 +292,13 @@ onMounted(() => {
   });
 
   // 尝试初始化游戏（如果携带了参数）
-  const sessionId = route.params.id as string;
-  const qGameId = route.query.gameId as string;
-  const qPlayerIds = route.query.playerIds as string;
-
-  if (qGameId && qPlayerIds) {
+  if (initialGameId && initialPlayerIds) {
     try {
-      const pIds = JSON.parse(qPlayerIds);
+      const pIds = JSON.parse(initialPlayerIds);
       socket.emit("app:initGame", {
-        gameId: qGameId,
+        gameId: initialGameId,
         playerIds: pIds,
-        sessionId: sessionId,
+        sessionId: initialSessionId,
       });
     } catch (e) {
       showError("处理玩家ID时出错: " + e);
@@ -288,7 +307,20 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
+  if (leaveTimer) clearTimeout(leaveTimer);
   if (socket) {
+    // 离开时通知后端清理
+    if (initialGameId && initialPlayerIds) {
+      try {
+        socket.emit("game:leave", {
+          gameId: initialGameId,
+          playerIds: JSON.parse(initialPlayerIds),
+          sessionId: initialSessionId,
+        });
+      } catch (e) {
+        console.error("Failed to parse playerIds on leave:", e);
+      }
+    }
     leaveGame(socket);
   }
 });
