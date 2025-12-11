@@ -318,10 +318,15 @@ function sendMessage() {
 .chat-list {
   margin: 8px 0;
   padding: 0 12px;
-  border-radius: var(--n-border-radius);
+  background-color: transparent;
+  border-bottom: 0;
 }
 
 .chat-item {
-  background-color: #cb0f0f;
+  background-color: var(--n-color);
+  border-radius: var(--n-border-radius);
+  border: 1px solid var(--n-border-color);
+  margin: 12px 0;
+  padding: 2em;
 }
 </style>
