@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 import uuid
 
@@ -9,6 +10,19 @@ from ..Logger import get_logger
 
 BASE = Path(__file__).resolve().parent.parent.parent
 USERS_DIR = BASE / ".users"
+
+if not USERS_DIR.exists():
+    os.mkdir(USERS_DIR)
+    players_file = USERS_DIR / "players.json"
+    apikeys_file = USERS_DIR / "apikeys.env"
+    
+    with open(players_file,"w",encoding="UTF-8") as f:
+        init_players_file = {
+            "human": [],
+            "online": [],
+            "local": []
+        }
+        json.dump(init_players_file,f, ensure_ascii=False,indent=2)
 
 
 players_bp = Blueprint("players", __name__)
@@ -45,6 +59,13 @@ def api_players_get():
 @players_bp.route("/api/players/providers", methods=["GET"])
 @players_log.decorate.info("拉取供应商列表")
 def api_players_providers_get():
+    if os.getenv("debug", "0") == "1":
+        players_log.info(f"已加载 1 个默认供应商")
+        return (
+        jsonify({"ok": True, "data": [{'id': "default", 'name': 'default_provider'}]}),
+        200,
+    )
+
     import litellm
 
     _providers = []
@@ -52,7 +73,7 @@ def api_players_providers_get():
         _providers.append({"id": provider, "name": provider.capitalize()})
 
     data = sorted(_providers, key=lambda x: x["name"])
-    players_log.info(f"已加载 {len(data)} 个供应商")
+    players_log.info(f"已加载 {len(data)} 个供应商: {data[:3]}等")
     return (
         jsonify({"ok": True, "data": data}),
         200,

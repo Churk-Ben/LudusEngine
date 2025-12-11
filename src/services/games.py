@@ -1,4 +1,5 @@
 import datetime
+import os
 from pathlib import Path
 
 from flask import Blueprint, jsonify
@@ -9,6 +10,9 @@ from ..services.players import get_player_by_uuid
 
 BASE = Path(__file__).resolve().parent.parent.parent
 GAMES_DIR = BASE / ".games"
+
+if not GAMES_DIR.exists():
+    os.mkdir(GAMES_DIR)
 
 games_bp = Blueprint("games", __name__)
 games_log = get_logger("GameService")
