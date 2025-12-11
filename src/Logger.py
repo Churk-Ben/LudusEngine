@@ -8,36 +8,44 @@ import functools
 import inspect
 import logging
 import os
+from datetime import datetime
 from pathlib import Path
+from typing import Dict, List
 
 from concurrent_log_handler import ConcurrentRotatingFileHandler
 
 BASE = Path(__file__).resolve().parent.parent
 LOG_DIR = BASE / "logs"
+GAMES_DIR = BASE / ".games"
+GAMES_LOG_DIR = GAMES_DIR / ".logs"
 DEFAULT_LOGFILE = LOG_DIR / "ludus.log"
 
 FORMATTER = logging.Formatter(
     "%(asctime)s [%(levelname)s] %(name)s - %(message)s", "%Y-%m-%d %H:%M:%S"
 )
+GAMES_LOG_FORMATTER = logging.Formatter(
+    "[%(asctime)s] %(name)s : %(message)s", "%m-%d %H:%M:%S"
+)
 
 os.makedirs(LOG_DIR, exist_ok=True)
+os.makedirs(GAMES_LOG_DIR, exist_ok=True)
 
 
-def _create_stream_handler(level):
+def _create_stream_handler(level, formatter=FORMATTER):
     sh = logging.StreamHandler()
     sh.setLevel(level)
-    sh.setFormatter(FORMATTER)
+    sh.setFormatter(formatter)
     return sh
 
 
-def _create_file_handler(logfile, level):
+def _create_file_handler(logfile, level, formatter=FORMATTER):
     # 使用大小轮转日志文件，每个文件最大100KB，保留5个备份
     # This is process-safe
     fh = ConcurrentRotatingFileHandler(
         logfile, maxBytes=102400, backupCount=5, encoding="utf-8"
     )
     fh.setLevel(level)
-    fh.setFormatter(FORMATTER)
+    fh.setFormatter(formatter)
     return fh
 
 
@@ -93,12 +101,13 @@ class DecoratorFactory:
         return self._create_decorator(logging.ERROR, message_template)
 
 
-def get_logger(name=None, level=logging.DEBUG, logfile=None):
+def get_logger(name=None, level=logging.DEBUG, logfile=None, formatter=FORMATTER):
     """
     返回配置好的日志记录器
     - name: 日志记录器名称 (默认根记录器) .
     - level: 日志级别 (默认 INFO) .
     - logfile: 日志文件路径. 若为 None 则使用 DEFAULT_LOGFILE .
+    - formatter: 日志格式. 若为 None 则使用默认 FORMATTER .
     """
     if name is None:
         # 默认使用根包名, 如果无法获取则使用"Default"
@@ -117,13 +126,72 @@ def get_logger(name=None, level=logging.DEBUG, logfile=None):
     logger.setLevel(level)
     logger.propagate = False
 
-    logger.addHandler(_create_stream_handler(level))
-    logger.addHandler(_create_file_handler(logfile, level))
+    logger.addHandler(_create_stream_handler(level, formatter))
+    logger.addHandler(_create_file_handler(logfile, level, formatter))
 
     # 将 DecoratorFactory 实例绑定到记录器, 用于创建日志装饰器
     setattr(logger, "decorate", DecoratorFactory(logger))
 
     return logger
+
+
+class GameLogger:
+    def __init__(self, name: str, players: List[Dict[str, str]]):
+        self.timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        self.log_dir = GAMES_LOG_DIR / self.timestamp
+        os.makedirs(self.log_dir, exist_ok=True)
+
+        self._clear_handlers("System")
+        self.system_logger = get_logger(
+            "System", logging.INFO, self.log_dir / "System.log", GAMES_LOG_FORMATTER
+        )
+
+        self.loggers = {}
+        for player in players:
+            # Try to extract assuming {"player_uuid": "...", "player_name": "..."}
+            p_uuid = player.get("player_uuid")
+            p_name = player.get("player_name")
+
+            # Fallback for {uuid: name} format
+            if not p_uuid or not p_name:
+                if len(player) == 1:
+                    p_uuid = list(player.keys())[0]
+                    p_name = list(player.values())[0]
+
+            if p_uuid and p_name:
+                self._clear_handlers(p_name)
+                self.loggers[p_name] = get_logger(
+                    p_name,
+                    logging.INFO,
+                    self.log_dir / f"{p_uuid}.log",
+                    GAMES_LOG_FORMATTER,
+                )
+
+    def _clear_handlers(self, name):
+        logger = logging.getLogger(name)
+        for h in logger.handlers[:]:
+            logger.removeHandler(h)
+            h.close()
+
+    def log_event(self, message: str, visible_to: List[str] = None):
+        if visible_to:
+            self.system_logger.info(f"[Limited to {visible_to}] {message}")
+            for p_name in visible_to:
+                logger = self.loggers.get(p_name)
+                if logger:
+                    logger.info(message)
+        else:
+            self.system_logger.info(message)
+            for logger in self.loggers.values():
+                logger.info(message)
+
+    def get_events(self, name):
+        # 获得指定玩家的log文件路径
+        return self.log_dir / f"{name}.log"
+
+    def _get_player_log_file(self, name: str) -> Path:
+        # 获得指定玩家的log文件路径
+        return self.log_dir / f"{name}.log"
 
 
 if __name__ == "__main__":

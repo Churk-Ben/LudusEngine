@@ -13,8 +13,7 @@ from ..services.players import get_player_by_uuid, get_player_type_by_uuid
 BASE = Path(__file__).resolve().parent.parent.parent
 GAMES_DIR = BASE / ".games"
 
-if not GAMES_DIR.exists():
-    os.mkdir(GAMES_DIR)
+os.makedirs(GAMES_DIR, exist_ok=True)
 
 games_bp = Blueprint("games", __name__)
 games_log = get_logger("GameService")
@@ -28,7 +27,7 @@ def api_games_get():
     items = []
     if GAMES_DIR.exists():
         for p in GAMES_DIR.iterdir():
-            if p.is_dir():
+            if p.is_dir() and not p.name.startswith("."):
                 items.append(p.name)
 
     games_log.info(f"游戏列表: {items}")
@@ -73,7 +72,7 @@ def socket_on_init_game(data):
     games_log.info(f"游戏会话 {session_id} 初始化玩家列表: {players}")
     emit("game:players", players)
 
-    # TODO 初始化后端游戏进程
+    # 初始化后端游戏进程
     thread = threading.Thread(target=time.sleep, args=(30,), daemon=True)
     game_threads[session_id] = thread
     thread.start()
