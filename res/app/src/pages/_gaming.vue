@@ -25,15 +25,14 @@
               :key="index"
               class="chat-item"
             >
-              <div class="bubble">{{ msg.sender }}: {{ msg.content }}</div>
-              <!-- <n-thing class="my-1 px-2 py-1 rounded-md" :title="msg.sender">
+              <n-thing :title="msg.sender">
                 <template #description>
                   <span style="font-size: 12px; opacity: 0.8">
                     {{ msg.time }}
                   </span>
                 </template>
                 {{ msg.content }}
-              </n-thing> -->
+              </n-thing>
             </n-list-item>
           </n-list>
         </n-scrollbar>
@@ -327,6 +326,6 @@ function sendMessage() {
   border-radius: var(--n-border-radius);
   border: 1px solid var(--n-border-color);
   margin: 12px 0;
-  padding: 2em;
+  padding: 1.4em;
 }
 </style>

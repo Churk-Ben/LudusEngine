@@ -222,5 +222,5 @@ res/app/.vite/
 .users/*
 !.users
 
-.games/*
+#.games/*
 !.games
