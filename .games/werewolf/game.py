@@ -1,25 +1,23 @@
-import random
-import yaml
-import time
-from typing import List, Dict, Optional, Any, Callable, Union
-from pathlib import Path
-from enum import Enum
-import os
-from datetime import datetime
-
-
-from litellm import completion
-from yaml import safe_load
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
+from datetime import datetime
+from enum import Enum
+import json
+import os
+from pathlib import Path
+import random
+import sys
+import time
+from typing import Any, Callable, Dict, List, Optional, Union
+
+from src.Logger import GameLogger
+from src.services.players import Player
 
 BASE = Path(__file__).resolve().parent.parent.parent
 SRC_DIR = BASE / "src"
-import sys
+
 
 sys.path.append(str(BASE))
-
-from src.Logger import GameLogger
 
 
 # -----------------------------------------------------------------------------
@@ -140,7 +138,7 @@ class GuardAction(GameAction):
         alive_players = game._get_alive_players()
         valid_targets = [p for p in alive_players if p != game.last_guarded]
 
-        target = prompt_for_choice(guard, prompt, valid_targets)
+        target = guard.choose(prompt, valid_targets)
 
         game.players[target].is_guarded = True
         game.last_guarded = target
@@ -232,7 +230,7 @@ class WerewolfNightAction(GameAction):
             for wolf_name in werewolves:
                 wolf_player = game.players[wolf_name]
                 prompt = f"{wolf_name}, 请投票选择要击杀的目标: "
-                target = prompt_for_choice(wolf_player, prompt, alive_players)
+                target = wolf_player.choose(prompt, alive_players)
                 votes[target] += 1
 
             max_votes = 0
@@ -271,7 +269,7 @@ class SeerAction(GameAction):
         game.logger.log_event("预言家请睁眼. 请选择要你要查验的玩家: ", [seer.name])
 
         alive_players = game._get_alive_players()
-        target = prompt_for_choice(seer, prompt, alive_players)
+        target = seer.choose(prompt, alive_players)
 
         role = game.players[target].role
         identity = "狼人" if role == Role.WEREWOLF.value else "好人"
@@ -318,7 +316,7 @@ class WitchAction(GameAction):
         # Save Potion
         if not game.witch_save_used and actual_killed:
             prompt = "女巫, 你要使用解药吗? "
-            if prompt_for_choice(witch, prompt, ["y", "n"]) == "y":
+            if witch.choose(prompt, ["y", "n"]) == "y":
                 actual_killed = None
                 game.witch_save_used = True
                 print(f"#@ 你使用解药救了 {game.killed_player}")
@@ -330,9 +328,9 @@ class WitchAction(GameAction):
         # Poison Potion
         if not game.witch_poison_used:
             prompt = "女巫, 你要使用毒药吗? "
-            if prompt_for_choice(witch, prompt, ["y", "n"]) == "y":
+            if witch.choose(prompt, ["y", "n"]) == "y":
                 poison_prompt = "请选择要毒杀的玩家: "
-                target = prompt_for_choice(witch, poison_prompt, alive_players)
+                target = witch.choose(poison_prompt, alive_players)
                 if actual_killed is None:
                     actual_killed = target
                 else:
@@ -391,7 +389,7 @@ class DayVoteAction(GameAction):
         for voter_name in alive_players:
             voter = game.players[voter_name]
             prompt = f"{voter_name}, 请投票: "
-            target = prompt_for_choice(voter, prompt, alive_players)
+            target = voter.choose(prompt, alive_players)
             votes[target] += 1
             print(f"#: {voter_name} 投票给 {target}")
             game.logger.log_event(
@@ -417,219 +415,6 @@ class DayVoteAction(GameAction):
                 "投票平票, 无人出局",
                 game.all_player_names,
             )
-
-
-# player.py
-with open("config.yaml", "r", encoding="utf-8") as f:
-    config = safe_load(f)
-    DEBUG = config.get("debug", True)
-
-PROMPT = """
-你正在一局狼人杀游戏中, 你的名字是{self.name}, 身份是{self.role}. 请认真参与游戏, 努力帮助自己的阵营获胜.
-
-**基本原则:**
-1.  **隐藏身份:** 不要直接或间接透露你的身份, 尤其是你的特殊能力.
-2.  **分析局势:** 根据发言和投票, 判断其他玩家的身份和阵营.
-3.  **有效沟通:** 你的发言和投票是影响游戏走向的关键. 请表达清晰, 有逻辑. 使用<br>标签换行, <strong></strong>标签组加粗, 其余一律不允许使用.
-4.  **避免重复:** 每次发言都要提供新的信息或观点, 绝对不要重复之前已经说过的话. 仔细阅读游戏记录, 确保你的发言是独特和有价值的.
-5.  **避免幻想:** **不要编造游戏开始前的场外信息或虚构的背景故事**. 你的发言应该基于当前游戏进程中发生的事件. 游戏内的策略性欺诈(如狼人伪装身份、平民虚报身份等)是允许的, 但不要创造不存在的游戏外情节.
-6.  **注意角色配置:** **严格按照本场游戏的角色配置发言, 不要提及本场不存在的角色**. 仔细确认当前游戏中实际存在哪些角色, 避免谈论不存在的神职或玩家.
-7.  **锚定自我身份:** **始终以你自己的身份和立场发言, 不要跑到其他玩家的立场上去思考或发言**. 你是{self.name}, 身份是{self.role}, 请严格从这个角度参与游戏.
-
-**角色专属指南:**
-*   **如果你是狼人:**
-    *   **夜晚讨论:** 和你的狼同伴积极讨论, 统一击杀目标. 优先选择看起来像神职的玩家(如预言家、女巫). 如果无法确定, 可以选择发言较好或者被怀疑的玩家, 混淆视听. **重要：每次发言都要提出新的观点或信息, 不要重复之前说过的话. 当你们讨论完毕并达成一致意见后, 必须输入'0'来结束讨论进入投票阶段, 不要无休止地讨论下去. **
-    *   **战术:** 可以选择悍跳(假装自己是预言家)、倒钩(站边一个真正的预言家以获取信任)或者深潜(隐藏在好人中).
-    *   **发言:** 伪装成好人, 误导好人阵营的判断. 可以通过踩其他玩家、聊心态、或者提出自己的逻辑来建立好人形象. **避免重复之前的发言内容. **
-*   **如果你是预言家:**
-    *   **验人:** 每天查验一个你怀疑是狼人的玩家. 你的验人结果对好人至关重要.
-    *   **跳身份:** 在合适的时机(通常是第一天)跳出身份, 报出你的验人信息, 带领好人投票.
-    *   **策略建议:** 可以根据游戏策略需要调整报告内容, 但避免编造游戏外的虚假背景信息.
-*   **如果你是女巫:**
-    *   **用药:** 你的解药和毒药非常宝贵. 解药通常在第一晚救下被杀的玩家. 毒药要谨慎使用, 最好在你确认一个玩家是狼人时再用.
-    *   **策略建议:** 可以根据游戏策略需要调整发言内容, 但避免编造游戏外的虚假背景信息.
-*   **如果你是猎人:**
-    *   **威慑:** 你可以在发言中适当表现强势, 让狼人不敢轻易攻击你.
-    *   **开枪:** 当你被投票出局或被狼人杀死时, 你可以带走场上任意一个玩家. 请根据局势, 射杀你认为是狼人的玩家.
-*   **如果你是守卫:**
-    *   **守护:** 每晚选择一个玩家进行守护, 不能连续两晚守护同一人.
-    *   **策略建议:** 可以根据游戏策略需要调整发言内容, 但避免编造游戏外的虚假背景信息.
-*   **如果你是平民:**
-    *   **逻辑:** 仔细听发言, 找出逻辑漏洞. 你的目标是帮助神职玩家找出所有狼人.
-    *   **站边:** 相信你认为是预言家的玩家, 并跟随他投票.
-
-**行动指令:**
-接下来, 你会收到法官的指令. 请严格按照指令要求行动.
-*   **如果是选择:** 从给出的选项中选择一项, **仅返回选项的名称**, 不要添加任何解释、序号或其他文字.
-*   **如果是发言:** **仅输出你想要说的话**, 不要包含你的名字、身份或任何解释.
-"""
-
-REMINDER = """
-重要提醒：请根据当前情况发表新的、有意义的观点, 避免重复之前的发言内容. 
-**关键警告：不要编造游戏开始前的场外信息或虚构的背景故事. 你的发言应该基于当前游戏进程, 游戏内的策略性欺诈是允许的. **
-**角色配置提醒：严格按照本场游戏的角色配置发言, 不要提及本场不存在的角色. **
-**身份锚定：你是{0}, 身份是{1}, 请严格从这个角度发言, 不要跑到其他玩家的立场上. **
-"""
-
-REMINDER_WEREWOLF = """
-**特别注意**：如果你是狼人且正在夜晚讨论阶段, 当你们已经充分讨论并达成一致意见时, 请**仅回答**'0'来结束讨论进入投票阶段. **不要无休止地重复讨论**. 
-"""
-
-REMINDER_FIRST_NIGHT = """
-**现在是第一晚** , 游戏刚刚开始, 因此你不应该讨论例如"先前的发言等"场外信息.
-"""
-
-
-class Player:
-    def __init__(self, name: str, role: str):
-        self.name = name
-        self.role = role
-        self.prompt = PROMPT.format(self=self)
-        self.is_alive = True
-        self.is_guarded = False
-        self.config = None
-        self.bind_config()
-        self.is_human = self.config["human"]
-        self.game_logger = None
-        self.is_first_night = True
-
-    def bind_config(self):
-        with open("config.yaml", "r", encoding="utf-8") as f:
-            config = safe_load(f)
-            for player in config["players"]:
-                if player["name"] == self.name:
-                    self.config = player
-                    break
-
-    def set_logger(self, logger):
-        self.game_logger = logger
-
-    def call_ai_response(self, prompt_text: str, valid_choices: List[str]):
-        if DEBUG:
-            return random.choice(valid_choices)
-
-        history = []
-        if self.game_logger:
-            log_file = self.game_logger._get_player_log_file(self.name)
-            if os.path.exists(log_file):
-                with open(log_file, "r", encoding="utf-8") as f:
-                    log_content = f.read()
-                    context_reminder = REMINDER.format(self.name, self.role)
-                    if (
-                        "请发言或输入 '0' 准备投票" in prompt_text
-                        and self.role == "Werewolf"
-                    ):
-                        context_reminder += REMINDER_WEREWOLF
-                        if self.is_first_night:
-                            self.is_first_night = False
-                            context_reminder += REMINDER_FIRST_NIGHT
-                    history.append(
-                        {
-                            "role": "system",
-                            "content": f"本场全部游戏记录：\n{log_content}\n\n{context_reminder}",
-                        }
-                    )
-
-        history.append({"role": "system", "content": self.prompt})
-        prompt = f"{prompt_text}\n请从以下选项中选择: {', '.join(valid_choices)}"
-        history.append({"role": "user", "content": prompt})
-
-        response = completion(
-            model=self.config["model"],
-            messages=history,
-            stream=False,
-        )
-        ai_choice = response.choices[0].message.content
-        for choice in valid_choices:
-            if choice in ai_choice:
-                return choice
-        return random.choice(valid_choices)
-
-    def call_human_response(
-        self, prompt_text: str, valid_choices: List[str], allow_skip: bool = False
-    ):
-        while True:
-            print(prompt_text)
-            display_choices = list(valid_choices)
-            if allow_skip:
-                display_choices.append("skip")
-
-            for i, choice in enumerate(display_choices):
-                print(f"[yellow]{i + 1}[/yellow]. [cyan]{choice}[/cyan]")
-
-            player_input = input("> ").strip()
-            player_input_lower = player_input.lower()
-
-            if player_input.isdigit():
-                choice_index = int(player_input) - 1
-                if 0 <= choice_index < len(display_choices):
-                    selected_choice = display_choices[choice_index]
-                    return selected_choice
-
-            if allow_skip and player_input_lower == "skip":
-                return "skip"
-
-            for choice in valid_choices:
-                if choice.lower() == player_input_lower:
-                    return choice
-
-            print("[bold red]无效的选择, 请重新输入. [/bold red]")
-
-    def call_ai_speak(self, prompt_text: str):
-        if DEBUG:
-            return "ai_response<br>, and <strong>ai_response</strong>"
-        history = []
-        if self.game_logger:
-            log_file = self.game_logger._get_player_log_file(self.name)
-            if os.path.exists(log_file):
-                with open(log_file, "r", encoding="utf-8") as f:
-                    log_content = f.read()
-                    if log_content.strip():
-                        context_reminder = REMINDER.format(self.name, self.role)
-                        if (
-                            "请发言或输入 '0' 准备投票" in prompt_text
-                            and self.role == "Werewolf"
-                        ):
-                            context_reminder += REMINDER_WEREWOLF
-                        context_prompt = (
-                            f"游戏记录:\n{log_content}\n\n{context_reminder}"
-                        )
-                        history.append({"role": "system", "content": context_prompt})
-
-        history.append({"role": "system", "content": self.prompt})
-        prompt = f"{prompt_text}"
-        history.append({"role": "user", "content": prompt})
-
-        print(f"{self.name} 正在思考...")
-        response = completion(
-            model=self.config["model"],
-            messages=history,
-            stream=False,
-        )
-        speech = response.choices[0].message.content
-        return speech
-
-    def call_human_speak(self, prompt_text: str):
-        return input(prompt_text)
-
-    def speak(self, prompt_text: str):
-        if self.is_human:
-            return self.call_human_speak(prompt_text)
-        else:
-            return self.call_ai_speak(prompt_text)
-
-
-# ui.py
-def prompt_for_choice(
-    player: "Player",
-    prompt_text: str,
-    valid_choices: List[str],
-    allow_skip: bool = False,
-) -> str:
-    if player.is_human:
-        return player.call_human_response(prompt_text, valid_choices, allow_skip)
-    else:
-        return player.call_ai_response(prompt_text, valid_choices)
 
 
 # Game.py
@@ -710,18 +495,60 @@ class WerewolfGame:
         self.day_number = 0
 
     def setup_game(self):
-        try:
-            with open("config.yaml", "r", encoding="utf-8") as file:
-                config = yaml.safe_load(file)
-                player_count = len(config["players"])
-                player_names = [player["name"] for player in config["players"]]
-                self.all_player_names = player_names
+        game_dir = Path(__file__).resolve().parent
+        config_path = game_dir / "config.json"
+        prompt_path = game_dir / "prompt.json"
 
-        except (FileNotFoundError, KeyError, ValueError):
-            print("#! 配置文件有错, 请检查配置文件.")
+        try:
+            with open(config_path, "r", encoding="utf-8") as file:
+                config = json.load(file)
+                # If players are not provided in __init__, load from config
+                if not self._players:
+                    player_configs = config.get("players", [])
+                    self._players = []
+                    for p in player_configs:
+                        self._players.append(
+                            {
+                                "player_name": p["name"],
+                                "player_uuid": p.get("uuid", p["name"]),
+                                # Merge other config if needed
+                                **p,
+                            }
+                        )
+
+                # Use the current _players list to set up names and map
+                self.all_player_names = [
+                    p.get("player_name", "") for p in self._players
+                ]
+                player_names = self.all_player_names
+
+                # Build a map for looking up config by name (for prompts/role assignment logic)
+                # This combines data passed in _players with data in config if names match
+                self.player_config_map = {}
+                # First fill with config data
+                for p in config.get("players", []):
+                    self.player_config_map[p["name"]] = p
+                # Then update/override with passed player data
+                for p in self._players:
+                    name = p.get("player_name")
+                    if name:
+                        if name not in self.player_config_map:
+                            self.player_config_map[name] = {}
+                        self.player_config_map[name].update(p)
+                player_config_map = self.player_config_map
+
+            with open(prompt_path, "r", encoding="utf-8") as file:
+                prompts = json.load(file)
+
+        except (FileNotFoundError, KeyError, ValueError) as e:
+            self.logger.system_logger.error(f"配置文件或提示词文件有错: {str(e)}")
+            return
 
         except Exception as e:
-            print(f"#! 未知错误: {str(e)}")
+            self.logger.system_logger.error(f"未知错误: {str(e)}")
+            return
+
+        player_count = len(self.all_player_names)
 
         if player_count == 6:
             self.roles = {
@@ -768,8 +595,8 @@ class WerewolfGame:
         random.shuffle(role_list)
 
         for name, role in zip(player_names, role_list):
-            player = Player(name, role)
-            player.set_logger(self.logger)
+            p_config = player_config_map.get(name, {})
+            player = Player(name, role, p_config, prompts, self.logger)
             self.players[name] = player
 
         werewolves = self._get_alive_players([Role.WEREWOLF])
@@ -870,9 +697,7 @@ class WerewolfGame:
                 alive_players_for_shot.append(p)
         hunter_player = self.players[hunter_name]
         prompt = f"{hunter_name}, 请选择你要带走的玩家: "
-        target = prompt_for_choice(
-            hunter_player, prompt, alive_players_for_shot, allow_skip=True
-        )
+        target = hunter_player.choose(prompt, alive_players_for_shot, allow_skip=True)
 
         if target == "skip":
             print("#@ 猎人放弃了开枪")
@@ -920,9 +745,12 @@ class WerewolfGame:
 
 if __name__ == "__main__":
     # Load config to get players
+    game_dir = Path(__file__).resolve().parent
+    config_path = game_dir / "config.json"
+
     try:
-        with open("config.yaml", "r", encoding="utf-8") as f:
-            config_data = yaml.safe_load(f)
+        with open(config_path, "r", encoding="utf-8") as f:
+            config_data = json.load(f)
             # Construct players list for GameLogger
             # Assuming config has players with 'name'. UUID might be missing, so we generate or use name.
             init_players = []
@@ -941,3 +769,5 @@ if __name__ == "__main__":
 
     game = WerewolfGame(init_players)
     game.run_game()
+
+Game = WerewolfGame
