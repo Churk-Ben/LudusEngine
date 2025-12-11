@@ -18,7 +18,11 @@
 
       <!-- 消息容器 -->
       <div class="message-container">
-        <n-scrollbar>
+        <n-scrollbar
+          ref="scrollbarRef"
+          id="message-scrollbar"
+          @scroll="handleScroll"
+        >
           <n-list class="chat-list">
             <n-list-item
               v-for="(msg, index) in messages"
@@ -122,7 +126,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, inject, onMounted, onUnmounted, h } from "vue";
+import { ref, inject, onMounted, onUnmounted, h, nextTick } from "vue";
 import {
   NCard,
   NPageHeader,
@@ -164,6 +168,14 @@ const gameInfo = ref<GameInfo>({
 const players = ref<Player[]>([]);
 const messages = ref<ChatMessage[]>([]);
 const inputValue = ref("");
+const scrollbarRef = ref<InstanceType<typeof NScrollbar> | null>(null);
+const isAtBottom = ref(true);
+
+const handleScroll = (e: Event) => {
+  const target = e.target as HTMLElement;
+  isAtBottom.value =
+    target.scrollHeight - (target.scrollTop + target.clientHeight) <= 50;
+};
 
 // 应用消息通知
 const renderMessage: MessageRenderMessage = (props) => {
@@ -228,12 +240,15 @@ onMounted(() => {
     onPlayers: (data: Player[]) => {
       players.value = data;
     },
-    onMessage: (data: ChatMessage) => {
+    onMessage: async (data: ChatMessage) => {
+      const shouldScroll = isAtBottom.value;
       messages.value.push(data);
       // 滚动到最底部
-      const messageContainer = document.querySelector(".message-container");
-      if (messageContainer) {
-        messageContainer.scrollTop = messageContainer.scrollHeight;
+      if (shouldScroll) {
+        await nextTick();
+        if (scrollbarRef.value) {
+          scrollbarRef.value.scrollTo({ top: 99999, behavior: "smooth" });
+        }
       }
     },
     onNotification: (data: GameNotification) => {
