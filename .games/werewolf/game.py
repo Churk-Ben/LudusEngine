@@ -1,72 +1,28 @@
-from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from datetime import datetime
 from enum import Enum
 import json
-import os
-from pathlib import Path
-import random
-import sys
 import time
-from typing import Any, Callable, Dict, List, Optional, Union
+import random
+from typing import Any, Dict, List, Optional
+from pathlib import Path
+import sys
 
-from src.Logger import GameLogger
-from src.services.players import Player
-
+# Ensure project root is in path (for direct execution)
 BASE = Path(__file__).resolve().parent.parent.parent
-SRC_DIR = BASE / "src"
+if str(BASE) not in sys.path:
+    sys.path.append(str(BASE))
 
-
-sys.path.append(str(BASE))
-
+from src.Game import Game, GameAction, GamePhase, GameStep, ActionContext
+from src.Player import Player
+from src.Logger import (
+    GameLogger,
+)  # Imported for type hinting if needed, though Game handles instantiation
 
 # -----------------------------------------------------------------------------
-# Core Engine Structures (DSL Support)
+# Models
 # -----------------------------------------------------------------------------
 
 
-@dataclass
-class ActionContext:
-    game: Any  # "WerewolfGame"
-    player: Optional[Any] = None  # "Player"
-    target: Optional[str] = None
-    extra_data: Dict[str, Any] = field(default_factory=dict)
-
-
-class GameAction(ABC):
-    """Abstract base class for a game action defined in DSL."""
-
-    @abstractmethod
-    def execute(self, context: ActionContext) -> Any:
-        pass
-
-    @abstractmethod
-    def description(self) -> str:
-        pass
-
-
-@dataclass
-class GameStep:
-    """A single step in a game phase (e.g. 'Werewolves wake up')."""
-
-    name: str
-    roles_involved: List[Any]  # List['Role']
-    action: GameAction
-    condition: Optional[Callable[[Any], bool]] = None  # Condition to run this step
-
-
-@dataclass
-class GamePhase:
-    """A game phase consisting of multiple steps (e.g. 'Night', 'Day')."""
-
-    name: str
-    steps: List[GameStep] = field(default_factory=list)
-
-    def add_step(self, step: GameStep):
-        self.steps.append(step)
-
-
-# models.py
 class Role(Enum):
     WEREWOLF = "werewolf"
     VILLAGER = "villager"
@@ -93,7 +49,7 @@ class NightStartAction(GameAction):
         return "入夜初始化"
 
     def execute(self, context: ActionContext) -> Any:
-        game = context.game
+        game: "WerewolfGame" = context.game
         game.day_number += 1
         print(f"#@ 第 {game.day_number} 天夜晚降临")
         game.logger.log_event(f"第 {game.day_number} 天夜晚降临", game.all_player_names)
@@ -107,7 +63,7 @@ class DayStartAction(GameAction):
         return "天亮初始化"
 
     def execute(self, context: ActionContext) -> Any:
-        game = context.game
+        game: "WerewolfGame" = context.game
         print("#: 天亮了.")
         print(f"#@ 现在是第 {game.day_number} 天白天")
         game.logger.log_event(
@@ -126,7 +82,7 @@ class GuardAction(GameAction):
         return "守卫守护"
 
     def execute(self, context: ActionContext) -> Any:
-        game = context.game
+        game: "WerewolfGame" = context.game
         guard = game._get_player_by_role(Role.GUARD)
         if not guard:
             return
@@ -153,7 +109,7 @@ class WerewolfNightAction(GameAction):
         return "狼人夜间行动"
 
     def execute(self, context: ActionContext) -> Any:
-        game = context.game
+        game: "WerewolfGame" = context.game
         werewolves = game._get_alive_players([Role.WEREWOLF])
         if not werewolves:
             return
@@ -259,7 +215,7 @@ class SeerAction(GameAction):
         return "预言家查验"
 
     def execute(self, context: ActionContext) -> Any:
-        game = context.game
+        game: "WerewolfGame" = context.game
         seer = game._get_player_by_role(Role.SEER)
         if not seer:
             return
@@ -287,7 +243,7 @@ class WitchAction(GameAction):
         return "女巫毒药与解药"
 
     def execute(self, context: ActionContext) -> Any:
-        game = context.game
+        game: "WerewolfGame" = context.game
         witch = game._get_player_by_role(Role.WITCH)
         if not witch:
             return
@@ -334,10 +290,6 @@ class WitchAction(GameAction):
                 if actual_killed is None:
                     actual_killed = target
                 else:
-                    # If someone was already killed and not saved, we have a second death.
-                    # The original logic handles this by calling handle_death immediately or later.
-                    # Here we might need to queue it or handle it.
-                    # Current logic: handle_death(target) immediately.
                     game.handle_death(target, DeathReason.POISONED_BY_WITCH)
 
                 game.witch_poison_used = True
@@ -345,9 +297,7 @@ class WitchAction(GameAction):
                 game.logger.log_event(f"你使用毒药毒了 {target}", [witch.name])
                 game.logger.log_event("女巫使用了毒药", game.all_player_names)
 
-        # Update killed player to the final result (if saved, it's None)
-        # Note: If poison was used on a second target, handle_death was called.
-        # If poison was used as the ONLY death (because save was used), actual_killed becomes target.
+        # Update killed player to the final result
         game.killed_player = actual_killed
 
         print("#@ 女巫请闭眼")
@@ -359,7 +309,7 @@ class DayDiscussionAction(GameAction):
         return "白天讨论"
 
     def execute(self, context: ActionContext) -> Any:
-        game = context.game
+        game: "WerewolfGame" = context.game
         alive_players = game._get_alive_players()
         print(f"#@ 场上存活的玩家: {', '.join(alive_players)}")
         game.logger.log_event(
@@ -380,7 +330,7 @@ class DayVoteAction(GameAction):
         return "白天投票"
 
     def execute(self, context: ActionContext) -> Any:
-        game = context.game
+        game: "WerewolfGame" = context.game
         alive_players = game._get_alive_players()
         print("#@ 请开始投票")
         game.logger.log_event("请开始投票", game.all_player_names)
@@ -417,21 +367,20 @@ class DayVoteAction(GameAction):
             )
 
 
-# Game.py
-class WerewolfGame:
+# -----------------------------------------------------------------------------
+# Game Class
+# -----------------------------------------------------------------------------
+
+
+class WerewolfGame(Game):
     def __init__(self, players: List[Dict[str, str]]):
-        self.players: Dict[str, Player] = {}
+        super().__init__("werewolf", players)
         self.roles: Dict[str, int] = {}
-        self.all_player_names: List[str] = [p.get("player_name", "") for p in players]
         self.killed_player: Optional[str] = None
         self.last_guarded: Optional[str] = None
         self.witch_save_used = False
         self.witch_poison_used = False
-        self.day_number = 0
-        self._players = players
-        self.logger = GameLogger("werewolf", self._players)
-        self.phases: List[GamePhase] = []
-        self._init_phases()
+        # self._players_data is available from base
 
     def _init_phases(self):
         # Night Phase
@@ -449,17 +398,6 @@ class WerewolfGame:
         day.add_step(GameStep("Discussion", [], DayDiscussionAction()))
         day.add_step(GameStep("Vote", [], DayVoteAction()))
         self.phases.append(day)
-
-    def run_phase(self, phase: GamePhase):
-        for step in phase.steps:
-            if self.check_game_over():
-                return
-
-            # Optional: Check if roles for this step exist in the game to skip early
-            # For now, we rely on actions checking themselves or existing logic.
-
-            context = ActionContext(game=self)
-            step.action.execute(context)
 
     def _get_alive_players(self, roles: Optional[List[Role]] = None) -> List[str]:
         alive_players = []
@@ -503,11 +441,11 @@ class WerewolfGame:
             with open(config_path, "r", encoding="utf-8") as file:
                 config = json.load(file)
                 # If players are not provided in __init__, load from config
-                if not self._players:
+                if not self._players_data:
                     player_configs = config.get("players", [])
-                    self._players = []
+                    self._players_data = []
                     for p in player_configs:
-                        self._players.append(
+                        self._players_data.append(
                             {
                                 "player_name": p["name"],
                                 "player_uuid": p.get("uuid", p["name"]),
@@ -516,20 +454,19 @@ class WerewolfGame:
                             }
                         )
 
-                # Use the current _players list to set up names and map
+                # Use the current _players_data list to set up names and map
                 self.all_player_names = [
-                    p.get("player_name", "") for p in self._players
+                    p.get("player_name", "") for p in self._players_data
                 ]
                 player_names = self.all_player_names
 
-                # Build a map for looking up config by name (for prompts/role assignment logic)
-                # This combines data passed in _players with data in config if names match
+                # Build a map for looking up config by name
                 self.player_config_map = {}
                 # First fill with config data
                 for p in config.get("players", []):
                     self.player_config_map[p["name"]] = p
                 # Then update/override with passed player data
-                for p in self._players:
+                for p in self._players_data:
                     name = p.get("player_name")
                     if name:
                         if name not in self.player_config_map:
@@ -734,14 +671,6 @@ class WerewolfGame:
             return True
         return False
 
-    def run_game(self):
-        self.setup_game()
-        while not self.check_game_over():
-            for phase in self.phases:
-                self.run_phase(phase)
-                if self.check_game_over():
-                    break
-
 
 if __name__ == "__main__":
     # Load config to get players
@@ -752,7 +681,6 @@ if __name__ == "__main__":
         with open(config_path, "r", encoding="utf-8") as f:
             config_data = json.load(f)
             # Construct players list for GameLogger
-            # Assuming config has players with 'name'. UUID might be missing, so we generate or use name.
             init_players = []
             for p in config_data.get("players", []):
                 init_players.append(
