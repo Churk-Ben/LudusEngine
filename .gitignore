@@ -221,3 +221,4 @@ res/app/.vite/
 
 *.env
 
+players.json

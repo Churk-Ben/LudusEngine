@@ -43,15 +43,6 @@ def get_player_by_uuid(uuid: str):
     return None
 
 
-# 根据uuid获取玩家类型
-def get_player_type_by_uuid(uuid: str):
-    for player_type in players_store:
-        for player in players_store[player_type]:
-            if player["uuid"] == uuid:
-                return player_type
-    return None
-
-
 @players_bp.route("/api/players", methods=["GET"])
 @players_log.decorate.info("拉取玩家列表")
 def api_players_get():

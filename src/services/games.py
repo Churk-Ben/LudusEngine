@@ -8,7 +8,7 @@ from flask import Blueprint, jsonify
 from flask_socketio import SocketIO, emit
 
 from ..Logger import get_logger
-from ..services.players import get_player_by_uuid, get_player_type_by_uuid
+from ..services.players import get_player_by_uuid
 
 BASE = Path(__file__).resolve().parent.parent.parent
 GAMES_DIR = BASE / ".games"
@@ -60,12 +60,12 @@ def socket_on_init_game(data):
     if player_ids:
         for uuid in player_ids:
             player = get_player_by_uuid(uuid)
-            # TODO 完善远程玩家类型
+            # TODO 完善远程玩家类型 "remote"
             players.append(
                 {
                     "id": str(uuid),
                     "name": player["name"] if player else f"Player {uuid}",
-                    "type": get_player_type_by_uuid(uuid) if player else "remote",
+                    "type": player["type"],
                     "data": {},
                 }
             )

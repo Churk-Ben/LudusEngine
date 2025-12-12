@@ -2,13 +2,21 @@
   "human": [
     {
       "name": "Churk",
+      "type": "human",
       "prefixPrompt": "窝是人类喵, 窝说话不像你们一样有条理喵, 窝还是新手喵, 让让窝喵...",
       "uuid": "3146a9d0-2ac3-467f-b144-c02348e5f239"
+    },
+    {
+      "name": "111",
+      "type": "human",
+      "prefixPrompt": "111",
+      "uuid": "cc093401-fcba-4f3b-ad27-993c4355e624"
     }
   ],
   "online": [
     {
       "name": "Deepseek-r1",
+      "type": "online",
       "providerId": "deepseek",
       "model": "reasoner",
       "apiKey": "rk_j98234bhqi39729f8h234",
@@ -16,15 +24,25 @@
     },
     {
       "name": "Gemini",
+      "type": "online",
       "providerId": "gemini",
       "model": "2.5-pro",
       "apiKey": "gk_iytbcq897t435vq3w56g",
       "uuid": "4c0746b3-b062-4f70-82ff-1be195bf5c37"
+    },
+    {
+      "name": "呜呜呜",
+      "type": "online",
+      "providerId": "deepseek",
+      "model": "chat-v3",
+      "apiKey": "rk_sdkjfsdfasfg",
+      "uuid": "6ae44995-2829-4635-b7c3-f7dfd48b8e29"
     }
   ],
   "local": [
     {
       "name": "Test",
+      "type": "local",
       "modelPath": "F:\\",
       "parameters": "--temperature=1",
       "uuid": "ef261e2e-a793-4a44-b74e-a7d05327e121"

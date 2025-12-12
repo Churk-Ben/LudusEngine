@@ -7,12 +7,14 @@ export interface LLMProvider {
 export interface HumanPlayer {
   uuid: string;
   name: string;
+  type: "human";
   prefixPrompt: string;
 }
 
 export interface OnlinePlayer {
   uuid: string;
   name: string;
+  type: "online";
   providerId: string;
   model: string;
   apiKey: string;
@@ -21,6 +23,7 @@ export interface OnlinePlayer {
 export interface LocalPlayer {
   uuid: string;
   name: string;
+  type: "local";
   modelPath: string;
   parameters: string;
 }

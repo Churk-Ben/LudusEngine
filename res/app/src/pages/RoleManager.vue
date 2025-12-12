@@ -365,12 +365,14 @@ async function doCreate() {
     case "human":
       newPlayer = {
         ...basePlayer,
+        type: "human",
         prefixPrompt: prefixPrompt.value,
       };
       break;
     case "online":
       newPlayer = {
         ...basePlayer,
+        type: "online",
         providerId: providerId.value,
         model: modelName.value.trim(),
         apiKey: apiKey.value.trim(),
@@ -379,6 +381,7 @@ async function doCreate() {
     case "local":
       newPlayer = {
         ...basePlayer,
+        type: "local",
         modelPath: modelPath.value.trim(),
         parameters: parameters.value.trim(),
       };
