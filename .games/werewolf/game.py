@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional
 from pathlib import Path
 import sys
 
-# Ensure project root is in path (for direct execution)
+# 确保项目根目录在路径中（用于直接执行）
 BASE = Path(__file__).resolve().parent.parent.parent
 if str(BASE) not in sys.path:
     sys.path.append(str(BASE))
@@ -16,10 +16,10 @@ from src.Game import Game, GameAction, GamePhase, GameStep, ActionContext
 from src.Player import Player
 from src.Logger import (
     GameLogger,
-)  # Imported for type hinting if needed, though Game handles instantiation
+)  # 如果需要，导入用于类型提示，尽管 Game 处理实例化
 
 # -----------------------------------------------------------------------------
-# Models
+# 模型
 # -----------------------------------------------------------------------------
 
 
@@ -40,7 +40,7 @@ class DeathReason(Enum):
 
 
 # -----------------------------------------------------------------------------
-# Concrete Actions Implementation
+# 具体动作实现
 # -----------------------------------------------------------------------------
 
 
@@ -252,7 +252,7 @@ class WitchAction(GameAction):
         alive_players = game.get_alive_players()
         actual_killed = None
 
-        # Check death info
+        # 检查死亡信息
         if game.killed_player:
             if game.players[game.killed_player].is_guarded:
                 game.announce(
@@ -272,7 +272,7 @@ class WitchAction(GameAction):
                 )
                 actual_killed = game.killed_player
 
-        # Save Potion
+        # 解药
         if not game.witch_save_used and actual_killed:
             prompt = game.prompts["roles"]["witch"]["save_prompt"]
             if witch.choose(prompt, ["y", "n"]) == "y":
@@ -291,7 +291,7 @@ class WitchAction(GameAction):
                     "#@",
                 )
 
-        # Poison Potion
+        # 毒药
         if not game.witch_poison_used:
             prompt = game.prompts["roles"]["witch"]["poison_prompt"]
             if witch.choose(prompt, ["y", "n"]) == "y":
@@ -314,7 +314,7 @@ class WitchAction(GameAction):
                     "#@",
                 )
 
-        # Update killed player to the final result
+        # 将被杀玩家更新为最终结果
         game.killed_player = actual_killed
 
         game.announce(
@@ -392,7 +392,7 @@ class WerewolfGame(Game):
         # self._players_data is available from base
 
     def _init_phases(self):
-        # Night Phase
+        # 夜晚阶段
         night = GamePhase("Night")
         night.add_step(GameStep("NightStart", [], NightStartAction()))
         night.add_step(GameStep("Guard", [Role.GUARD], GuardAction()))
@@ -401,7 +401,7 @@ class WerewolfGame(Game):
         night.add_step(GameStep("Witch", [Role.WITCH], WitchAction()))
         self.phases.append(night)
 
-        # Day Phase
+        # 白天阶段
         day = GamePhase("Day")
         day.add_step(GameStep("DayStart", [], DayStartAction()))
         day.add_step(GameStep("Discussion", [], DayDiscussionAction()))
@@ -424,7 +424,7 @@ class WerewolfGame(Game):
         config, prompts, player_config_map = self.load_basic_config(game_dir)
         self.prompts = prompts
 
-        # Note: self.all_player_names and self._players_data are updated by load_basic_config
+        # 注意：self.all_player_names 和 self._players_data 由 load_basic_config 更新
 
         player_count = len(self.all_player_names)
 
@@ -589,14 +589,14 @@ class WerewolfGame(Game):
 
 
 if __name__ == "__main__":
-    # Load config to get players
+    # 加载配置以获取玩家
     game_dir = Path(__file__).resolve().parent
     config_path = game_dir / "config.json"
 
     try:
         with open(config_path, "r", encoding="utf-8") as f:
             config_data = json.load(f)
-            # Construct players list for GameLogger
+            # 为 GameLogger 构建玩家列表
             init_players = []
             for p in config_data.get("players", []):
                 init_players.append(
@@ -604,7 +604,7 @@ if __name__ == "__main__":
                         "player_name": p["name"],
                         "player_uuid": p.get(
                             "uuid", p["name"]
-                        ),  # Use name as uuid if missing
+                        ),  # 如果缺少 uuid，则使用 name
                     }
                 )
     except Exception as e:

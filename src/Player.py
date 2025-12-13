@@ -23,14 +23,14 @@ class Player:
         self.is_guarded = False
         self.is_first_night = True
 
-        # Inject self into the main prompt
+        # 将 self 注入主提示词
         self.prompt = self.prompts.get("PROMPT", "").format(self=self)
 
     def set_logger(self, logger):
         self.game_logger = logger
 
     def call_ai_response(self, prompt_text: str, valid_choices: List[str]):
-        # Check debug flag from environment or config, here we assume passed via config or os
+        # 检查环境或配置中的调试标志，这里我们假设通过配置或 os 传递
         if os.getenv("DEBUG_GAME", "0") == "1":
             import random
 
@@ -43,13 +43,13 @@ class Player:
                 with open(log_file, "r", encoding="utf-8") as f:
                     log_content = f.read()
 
-                    # Construct context reminder using injected templates
+                    # 使用注入的模板构建上下文提醒
                     context_reminder = self.prompts.get("REMINDER", "").format(
                         self.name, self.role
                     )
 
-                    # Logic for Werewolf night discussion reminder
-                    # Note: This logic is slightly game-specific but relies on prompts being present
+                    # 狼人夜间讨论提醒的逻辑
+                    # 注意：此逻辑略微特定于游戏，但依赖于提示词的存在
                     if (
                         "请发言或输入 '0' 准备投票" in prompt_text
                         and self.role == "Werewolf"
@@ -82,7 +82,7 @@ class Player:
             for choice in valid_choices:
                 if choice in ai_choice:
                     return choice
-            # Fallback
+            # 兜底
             import random
 
             return random.choice(valid_choices)
@@ -161,7 +161,7 @@ class Player:
             speech = response.choices[0].message.content
             return speech
         except Exception as e:
-            return f"(Error generating speech: {e})"
+            return f"(生成演讲时出错: {e})"
 
     def call_human_speak(self, prompt_text: str):
         return input(prompt_text)

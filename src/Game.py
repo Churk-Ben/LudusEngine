@@ -5,7 +5,7 @@ from pathlib import Path
 import sys
 import json
 
-# Ensure project root is in path
+# 确保项目根目录在路径中
 BASE = Path(__file__).resolve().parent.parent
 if str(BASE) not in sys.path:
     sys.path.append(str(BASE))
@@ -14,20 +14,20 @@ from src.Logger import GameLogger
 from src.Player import Player
 
 # -----------------------------------------------------------------------------
-# Core Engine Structures (DSL Support)
+# 核心引擎结构 (DSL 支持)
 # -----------------------------------------------------------------------------
 
 
 @dataclass
 class ActionContext:
-    game: Any  # "Game" subclass
+    game: Any  # "Game" 子类
     player: Optional[Player] = None
     target: Optional[str] = None
     extra_data: Dict[str, Any] = field(default_factory=dict)
 
 
 class GameAction(ABC):
-    """Abstract base class for a game action defined in DSL."""
+    """在 DSL 中定义的游戏动作抽象基类。"""
 
     @abstractmethod
     def execute(self, context: ActionContext) -> Any:
@@ -40,7 +40,7 @@ class GameAction(ABC):
 
 @dataclass
 class GameStep:
-    """A single step in a game phase (e.g. 'Werewolves wake up')."""
+    """游戏阶段中的单个步骤（例如 '狼人醒来'）。"""
 
     name: str
     roles_involved: List[Any]
@@ -50,7 +50,7 @@ class GameStep:
 
 @dataclass
 class GamePhase:
-    """A game phase consisting of multiple steps (e.g. 'Night', 'Day')."""
+    """由多个步骤组成的游戏阶段（例如 '夜晚', '白天'）。"""
 
     name: str
     steps: List[GameStep] = field(default_factory=list)
@@ -68,7 +68,7 @@ class Game(ABC):
         ]
         self._players_data = players_data
 
-        # Initialize Logger
+        # 初始化日志记录器
         self.logger = GameLogger(game_name, self._players_data)
 
         self.phases: List[GamePhase] = []
@@ -76,16 +76,16 @@ class Game(ABC):
 
     @abstractmethod
     def _init_phases(self):
-        """Initialize game phases and steps."""
+        """初始化游戏阶段和步骤。"""
         pass
 
     def run_phase(self, phase: GamePhase):
-        """Run a single game phase."""
+        """运行单个游戏阶段。"""
         for step in phase.steps:
             if self.check_game_over():
                 return
 
-            # Check condition if exists
+            # 如果存在条件则检查
             if step.condition and not step.condition(self):
                 continue
 
@@ -98,13 +98,13 @@ class Game(ABC):
 
     @abstractmethod
     def setup_game(self):
-        """Load configuration and initialize players/roles."""
+        """加载配置并初始化玩家/角色。"""
         pass
 
     def run_game(self):
-        """Main game loop."""
+        """主游戏循环。"""
         self.setup_game()
-        self._init_phases()  # Ensure phases are initialized
+        self._init_phases()  # 确保阶段已初始化
 
         while not self.check_game_over():
             for phase in self.phases:
@@ -114,8 +114,8 @@ class Game(ABC):
 
     def get_alive_players(self, allowed_roles: Optional[List[Any]] = None) -> List[str]:
         """
-        Get names of alive players.
-        allowed_roles: List of role values (can be Enum members or strings).
+        获取存活玩家的姓名。
+        allowed_roles: 角色值列表（可以是 Enum 成员或字符串）。
         """
         alive_players = []
 
@@ -135,8 +135,8 @@ class Game(ABC):
 
     def get_player_by_role(self, role: Any) -> Optional[Player]:
         """
-        Find the first alive player with the given role.
-        role: Can be Enum member or string.
+        查找具有给定角色的第一个存活玩家。
+        role: 可以是 Enum 成员或字符串。
         """
         role_value = role.value if hasattr(role, "value") else role
         for p in self.players.values():
@@ -146,9 +146,9 @@ class Game(ABC):
 
     def load_basic_config(self, game_dir: Path) -> Tuple[Dict, Dict, Dict[str, Dict]]:
         """
-        Load config.json and prompt.json from the game directory.
-        Merges player data from config with initial players data.
-        Returns (config, prompts, player_config_map).
+        从游戏目录加载 config.json 和 prompt.json。
+        将配置中的玩家数据与初始玩家数据合并。
+        返回 (config, prompts, player_config_map)。
         """
         config_path = game_dir / "config.json"
         prompt_path = game_dir / "prompt.json"
@@ -160,7 +160,7 @@ class Game(ABC):
         try:
             with open(config_path, "r", encoding="utf-8") as file:
                 config = json.load(file)
-                # If players are not provided in __init__, load from config
+                # 如果 __init__ 中未提供玩家，则从配置加载
                 if not self._players_data:
                     player_configs = config.get("players", [])
                     self._players_data = []
@@ -169,21 +169,21 @@ class Game(ABC):
                             {
                                 "player_name": p["name"],
                                 "player_uuid": p.get("uuid", p["name"]),
-                                # Merge other config if needed
+                                # 如果需要，合并其他配置
                                 **p,
                             }
                         )
 
-                # Use the current _players_data list to set up names and map
+                # 使用当前的 _players_data 列表设置名称和映射
                 self.all_player_names = [
                     p.get("player_name", "") for p in self._players_data
                 ]
 
-                # Build a map for looking up config by name
-                # First fill with config data
+                # 构建按名称查找配置的映射
+                # 首先填充配置数据
                 for p in config.get("players", []):
                     player_config_map[p["name"]] = p
-                # Then update/override with passed player data
+                # 然后使用传递的玩家数据更新/覆盖
                 for p in self._players_data:
                     name = p.get("player_name")
                     if name:
@@ -196,8 +196,8 @@ class Game(ABC):
 
         except (FileNotFoundError, KeyError, ValueError) as e:
             self.logger.system_logger.error(f"配置文件或提示词文件有错: {str(e)}")
-            # In case of error, we might return empty dicts or re-raise
-            # For now, print error is handled by logger, but we should ensure valid returns
+            # 如果出错，我们可能会返回空字典或重新引发异常
+            # 目前，打印错误由 logger 处理，但我们需要确保返回值有效
             pass
 
         except Exception as e:
@@ -210,25 +210,25 @@ class Game(ABC):
         self, message: str, visible_to: Optional[List[str]] = None, prefix: str = "#:"
     ):
         """
-        Encapsulated method to handle game announcements.
-        It prints to the console (standard output) and logs the event to the game logger.
+        封装的游戏公告处理方法。
+        它打印到控制台（标准输出）并将事件记录到游戏日志记录器。
 
         Args:
-            message (str): The content of the announcement.
-            visible_to (Optional[List[str]]): List of player names who can see this message.
-                                              If None, it's public (all players).
-            prefix (str): Prefix string for console output (e.g. '#:', '#@', '#!').
+            message (str): 公告内容。
+            visible_to (Optional[List[str]]): 可以看到此消息的玩家名称列表。
+                                              如果为 None，则为公开（所有玩家）。
+            prefix (str): 控制台输出的前缀字符串（例如 '#:', '#@', '#!'）。
         """
-        # Log to file with visibility scope
+        # 记录到文件，带可见性范围
         self.logger.log_event(message, visible_to)
 
-        # Print to console
-        # Note: Console output typically shows everything for the administrator/spectator.
-        # If we wanted to hide secrets from the console, we could check visible_to.
-        # But for now, we assume console is "God view".
+        # 打印到控制台
+        # 注意：控制台输出通常显示管理员/旁观者的所有内容。
+        # 如果我们想向控制台隐藏秘密，我们可以检查 visible_to。
+        # 但目前，我们假设控制台是“上帝视角”。
 
         if visible_to:
-            # If limited visibility, maybe indicate it in console
+            # 如果可见性受限，可能需要在控制台中指出
             print(f"{prefix} [Visible to {visible_to}] {message}")
         else:
             print(f"{prefix} {message}")
@@ -244,22 +244,22 @@ class Game(ABC):
         prefix: str = "#:",
     ):
         """
-        Process a discussion phase.
+        处理讨论阶段。
 
         Args:
-            participants: List of player names who can speak.
-            prompts: Dictionary containing prompt templates:
-                - 'start': Announcement at start (optional)
-                - 'prompt': Input prompt for player (required, format {0}=name)
-                - 'speech': Announcement of speech (required, format {0}=name, {1}=content)
-                - 'ready_msg': Announcement when player is ready (optional, format {0}=name, {1}=ready_count, {2}=total)
-                - 'timeout': Announcement when max rounds reached (optional, format {0}=max_rounds)
-                - 'alive_players': Announcement of alive players (optional, format {0}=joined_names)
-            max_rounds: Maximum number of discussion rounds.
-            enable_ready_check: If True, input '0' marks player as ready to end discussion.
-            shuffle_order: If True, randomize speaking order each round.
-            visibility: Who can see the announcements (None for public).
-            prefix: Prefix for announcements.
+            participants: 可以发言的玩家姓名列表。
+            prompts: 包含提示模板的字典：
+                - 'start': 开始时的公告（可选）
+                - 'prompt': 玩家的输入提示（必需，格式 {0}=name）
+                - 'speech': 演讲公告（必需，格式 {0}=name, {1}=content）
+                - 'ready_msg': 玩家准备好时的公告（可选，格式 {0}=name, {1}=ready_count, {2}=total）
+                - 'timeout': 达到最大轮次时的公告（可选，格式 {0}=max_rounds）
+                - 'alive_players': 存活玩家公告（可选，格式 {0}=joined_names）
+            max_rounds: 最大讨论轮数。
+            enable_ready_check: 如果为 True，输入 '0' 标记玩家准备结束讨论。
+            shuffle_order: 如果为 True，每轮随机打乱发言顺序。
+            visibility: 谁可以看到公告（None 表示公开）。
+            prefix: 公告前缀。
         """
         if "start" in prompts:
             self.announce(prompts["start"], visibility, "#@")
@@ -279,7 +279,7 @@ class Game(ABC):
         while len(ready_to_vote) < len(participants) and discussion_rounds < max_rounds:
             discussion_rounds += 1
 
-            # Determine order
+            # 确定顺序
             speakers = list(participants)
             if shuffle_order:
                 random.shuffle(speakers)
@@ -324,23 +324,23 @@ class Game(ABC):
         prefix: str = "#:",
     ) -> Optional[str]:
         """
-        Process a voting phase.
+        处理投票阶段。
 
         Args:
-            voters: List of player names who vote.
-            candidates: List of player names who can be voted for.
-            prompts: Dictionary containing prompt templates:
-                - 'start': Announcement at start (optional)
-                - 'prompt': Input prompt for voter (required, format {0}=name)
-                - 'action': Announcement of vote action (required, format {0}=voter, {1}=target)
-                - 'result_out': Announcement of result (required, format {0}=target)
-                - 'result_tie': Announcement of tie (required)
-            retry_on_tie: If True, loop until a single winner is chosen.
-            visibility: Who can see the announcements (None for public).
-            prefix: Prefix for announcements.
+            voters: 投票的玩家姓名列表。
+            candidates: 可以被投票的玩家姓名列表。
+            prompts: 包含提示模板的字典：
+                - 'start': 开始时的公告（可选）
+                - 'prompt': 投票者的输入提示（必需，格式 {0}=name）
+                - 'action': 投票动作公告（必需，格式 {0}=voter, {1}=target）
+                - 'result_out': 结果公告（必需，格式 {0}=target）
+                - 'result_tie': 平局公告（必需）
+            retry_on_tie: 如果为 True，循环直到选出唯一的获胜者。
+            visibility: 谁可以看到公告（None 表示公开）。
+            prefix: 公告前缀。
 
         Returns:
-            The name of the selected target, or None if no result/tie (and not retrying).
+            选定目标的名称，如果没有结果/平局（且不重试）则为 None。
         """
         if "start" in prompts:
             self.announce(prompts["start"], visibility, "#@")
@@ -371,8 +371,8 @@ class Game(ABC):
 
             if len(targets) == 1:
                 winner = targets[0]
-                if "result_out" in prompts:  # Or result_win
-                    # Try result_out first, generic key
+                if "result_out" in prompts:  # 或 result_win
+                    # 先尝试 result_out，通用键
                     self.announce(
                         prompts["result_out"].format(winner),
                         visibility,
@@ -385,4 +385,4 @@ class Game(ABC):
 
                 if not retry_on_tie:
                     return None
-                # If retry, loop continues
+                # 如果重试，循环继续
