@@ -79,47 +79,49 @@
         content-style="padding: 0; overflow-y: auto;"
         header-style="padding: 16px; border-bottom: 1px solid var(--n-border-color);"
       >
-        <n-list hoverable clickable>
-          <n-list-item
-            v-for="player in players"
-            :key="player.id"
-            @click="toggleDetail(player)"
-          >
-            <n-thing>
-              <template #avatar>
-                <n-avatar round size="small">
-                  <!-- TODO 根据玩家data里的信息设置头像 -->
-                  {{ player.name.charAt(0).toUpperCase() }}
-                </n-avatar>
-              </template>
-              <template #header>
-                {{ player.name }}
-              </template>
-              <template #header-extra>
-                {{ player.type }}
-              </template>
-              <template #description>
-                <div v-if="expandedPlayerIds.includes(player.id)">
-                  {{ JSON.stringify(player.data || {}, null, 2) }}
-                </div>
-                <template v-else>
-                  <span>点按查看玩家数据</span>
+        <n-scrollbar>
+          <n-list hoverable clickable>
+            <n-list-item
+              v-for="player in players"
+              :key="player.id"
+              @click="toggleDetail(player)"
+            >
+              <n-thing>
+                <template #avatar>
+                  <n-avatar round size="small">
+                    <!-- TODO 根据玩家data里的信息设置头像 -->
+                    {{ player.name.charAt(0).toUpperCase() }}
+                  </n-avatar>
                 </template>
-              </template>
-            </n-thing>
-          </n-list-item>
-          <!-- 默认玩家卡片 -->
-          <div v-if="players.length === 0" style="padding: 16px">
-            <n-card embedded>
-              <n-result
-                status="info"
-                title="等待玩家"
-                description="暂无玩家加入"
-                size="small"
-              />
-            </n-card>
-          </div>
-        </n-list>
+                <template #header>
+                  {{ player.name }}
+                </template>
+                <template #header-extra>
+                  {{ player.type }}
+                </template>
+                <template #description>
+                  <div v-if="expandedPlayerIds.includes(player.id)">
+                    {{ JSON.stringify(player.data || {}, null, 2) }}
+                  </div>
+                  <template v-else>
+                    <span>点按查看玩家数据</span>
+                  </template>
+                </template>
+              </n-thing>
+            </n-list-item>
+            <!-- 默认玩家卡片 -->
+            <div v-if="players.length === 0" style="padding: 16px">
+              <n-card embedded>
+                <n-result
+                  status="info"
+                  title="等待玩家"
+                  description="暂无玩家加入"
+                  size="small"
+                />
+              </n-card>
+            </div>
+          </n-list>
+        </n-scrollbar>
       </n-card>
     </div>
   </div>
@@ -326,7 +328,7 @@ onUnmounted(() => {
   }
 });
 
-// Send Message
+// 发送信息
 function sendMessage() {
   if (!inputValue.value.trim()) return;
 

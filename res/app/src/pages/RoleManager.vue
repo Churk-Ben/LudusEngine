@@ -15,20 +15,22 @@
                   <strong>{{ t("role.sections.human") }}</strong>
                 </div>
                 <div class="col-12">
-                  <div v-if="players.human.length === 0">
-                    <n-card size="small" :title="t('role.empty')" />
-                  </div>
-                  <div v-else v-for="p in players.human" :key="p.uuid">
-                    <n-card
-                      closable
-                      class="mb-1"
-                      size="small"
-                      :title="p.name"
-                      @close="handleRemovePlayer(p.uuid)"
-                    >
-                      <div class="text-truncate">{{ p.prefixPrompt }}</div>
-                    </n-card>
-                  </div>
+                  <n-scrollbar style="max-height: 20vh">
+                    <div v-if="players.human.length === 0">
+                      <n-card size="small" :title="t('role.empty')" />
+                    </div>
+                    <div v-else v-for="p in players.human" :key="p.uuid">
+                      <n-card
+                        closable
+                        class="mb-1"
+                        size="small"
+                        :title="p.name"
+                        @close="handleRemovePlayer(p.uuid)"
+                      >
+                        <div class="text-truncate">{{ p.prefixPrompt }}</div>
+                      </n-card>
+                    </div>
+                  </n-scrollbar>
                 </div>
               </section>
 
@@ -37,20 +39,22 @@
                   <strong>{{ t("role.modal.type.online") }}</strong>
                 </div>
                 <div class="col-12">
-                  <div v-if="players.online.length === 0">
-                    <n-card size="small" :title="t('role.empty')" />
-                  </div>
-                  <div v-else v-for="p in players.online" :key="p.uuid">
-                    <n-card
-                      closable
-                      class="mb-1"
-                      size="small"
-                      :title="p.name"
-                      @close="handleRemovePlayer(p.uuid)"
-                    >
-                      {{ providerName(p.providerId) }} - {{ p.model }}
-                    </n-card>
-                  </div>
+                  <n-scrollbar style="max-height: 20vh">
+                    <div v-if="players.online.length === 0">
+                      <n-card size="small" :title="t('role.empty')" />
+                    </div>
+                    <div v-else v-for="p in players.online" :key="p.uuid">
+                      <n-card
+                        closable
+                        class="mb-1"
+                        size="small"
+                        :title="p.name"
+                        @close="handleRemovePlayer(p.uuid)"
+                      >
+                        {{ providerName(p.providerId) }} - {{ p.model }}
+                      </n-card>
+                    </div>
+                  </n-scrollbar>
                 </div>
               </section>
 
@@ -59,20 +63,22 @@
                   <strong>{{ t("role.modal.type.local") }}</strong>
                 </div>
                 <div class="col-12">
-                  <div v-if="players.local.length === 0">
-                    <n-card size="small" :title="t('role.empty')" />
-                  </div>
-                  <div v-else v-for="p in players.local" :key="p.uuid">
-                    <n-card
-                      closable
-                      class="mb-1"
-                      size="small"
-                      :title="p.name"
-                      @close="handleRemovePlayer(p.uuid)"
-                    >
-                      {{ p.modelPath }}
-                    </n-card>
-                  </div>
+                  <n-scrollbar style="max-height: 20vh">
+                    <div v-if="players.local.length === 0">
+                      <n-card size="small" :title="t('role.empty')" />
+                    </div>
+                    <div v-else v-for="p in players.local" :key="p.uuid">
+                      <n-card
+                        closable
+                        class="mb-1"
+                        size="small"
+                        :title="p.name"
+                        @close="handleRemovePlayer(p.uuid)"
+                      >
+                        {{ p.modelPath }}
+                      </n-card>
+                    </div>
+                  </n-scrollbar>
                 </div>
               </section>
             </div>
@@ -203,6 +209,7 @@ import {
   NCard,
   NButton,
   NModal,
+  NScrollbar,
   NRadioGroup,
   NRadio,
   NSelect,

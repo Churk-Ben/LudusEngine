@@ -181,7 +181,7 @@ function start() {
   }
 }
 
-// TODO 载入游戏
+// 载入游戏
 onMounted(async () => {
   try {
     const [loadedGames, loadedPlayers] = await Promise.all([
