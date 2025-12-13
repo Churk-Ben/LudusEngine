@@ -29,6 +29,16 @@
       "name": "Frank",
       "human": false,
       "model": "deepseek/deepseek-reasoner"
+    },
+    {
+      "name": "George",
+      "human": false,
+      "model": "deepseek/deepseek-reasoner"
+    },
+    {
+      "name": "Hannah",
+      "human": false,
+      "model": "deepseek/deepseek-reasoner"
     }
   ]
 }
