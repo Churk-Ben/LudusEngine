@@ -183,11 +183,7 @@ class GameLogger:
             for logger in self.loggers.values():
                 logger.info(message)
 
-    def get_events(self, name):
-        # 获得指定玩家的log文件路径
-        return self.log_dir / f"{name}.log"
-
-    def _get_player_log_file(self, name: str) -> Path:
+    def get_events(self, name: str) -> Path:
         # 获得指定玩家的log文件路径
         return self.log_dir / f"{name}.log"
 

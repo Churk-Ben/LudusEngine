@@ -38,7 +38,7 @@ class Player:
 
         history = []
         if self.game_logger:
-            log_file = self.game_logger._get_player_log_file(self.name)
+            log_file = self.game_logger.get_events(self.name)
             if os.path.exists(log_file):
                 with open(log_file, "r", encoding="utf-8") as f:
                     log_content = f.read()
@@ -127,7 +127,7 @@ class Player:
 
         history = []
         if self.game_logger:
-            log_file = self.game_logger._get_player_log_file(self.name)
+            log_file = self.game_logger.get_events(self.name)
             if os.path.exists(log_file):
                 with open(log_file, "r", encoding="utf-8") as f:
                     log_content = f.read()
