@@ -300,9 +300,15 @@ def socket_on_game_leave(data):
     games_log.info(f"收到游戏离开请求 - Session: {session_id}")
 
     if session_id in game_sessions:
-        # TODO: 优雅停止游戏线程
+        # 优雅停止游戏线程
+        session = game_sessions[session_id]
+        if "game" in session and hasattr(session["game"], "stop_game"):
+             session["game"].stop_game()
+        
+        # 不立即删除，等待线程结束？或者直接删除，线程会因为 _running False 而退出
+        # 这里为了安全，我们还是删除引用
         del game_sessions[session_id]
-        games_log.info(f"游戏会话 {session_id} 已移除")
+        games_log.info(f"游戏会话 {session_id} 已标记停止并移除")
 
     leave_room(session_id)
 

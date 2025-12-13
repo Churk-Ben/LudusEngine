@@ -81,6 +81,12 @@ class Game(ABC):
 
         self.phases: List[GamePhase] = []
         self.day_number = 0
+        self._running = True
+
+    def stop_game(self):
+        """停止游戏运行"""
+        self._running = False
+        self.logger.system_logger.info("Game stop requested.")
 
     @abstractmethod
     def _init_phases(self):
@@ -114,8 +120,10 @@ class Game(ABC):
         self.setup_game()
         self._init_phases()  # 确保阶段已初始化
 
-        while not self.check_game_over():
+        while self._running and not self.check_game_over():
             for phase in self.phases:
+                if not self._running:
+                    break
                 self.run_phase(phase)
                 if self.check_game_over():
                     break
@@ -291,7 +299,11 @@ class Game(ABC):
 
         import random
 
-        while len(ready_to_vote) < len(participants) and discussion_rounds < max_rounds:
+        while (
+            self._running
+            and len(ready_to_vote) < len(participants)
+            and discussion_rounds < max_rounds
+        ):
             discussion_rounds += 1
 
             # 确定顺序

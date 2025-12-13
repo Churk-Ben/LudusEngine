@@ -88,10 +88,16 @@ def on_disconnect():
     if request.sid == connected_client_sid:
         log.info(f"客户端 {request.sid} 已断开, 正在关闭服务器...")
         connected_client_sid = None
-        # 如果是调试模式或者浏览器模式，可能不希望立即关闭
-        if os.getenv("DEBUG_GAME", "0") == "0":  # 仅在非调试模式下关闭
-            os.kill(os.getpid(), signal.SIGINT)
+        
+        # 检查是否允许关闭
+        # 默认允许关闭 (0), 除非 DEBUG_GAME 明确设为 1
+        debug_game = os.getenv("DEBUG_GAME", "0")
+        
+        if debug_game == "1":
+            log.info("Debug 模式下保持服务器运行 (DEBUG_GAME=1)")
         else:
-            log.info("Debug 模式下保持服务器运行")
+            # 正常退出
+            log.info("正在停止服务器...")
+            os.kill(os.getpid(), signal.SIGINT)
     else:
         log.warning(f"一个旧的或未被追踪的客户端 {request.sid} 已断开.")
