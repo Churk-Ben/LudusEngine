@@ -28,6 +28,12 @@ export interface LocalPlayer {
   parameters: string;
 }
 
+export interface RemotePlayer {
+  uuid: string;
+  name: string;
+  type: "remote";
+}
+
 export interface AllPlayers {
   human: HumanPlayer[];
   online: OnlinePlayer[];
@@ -35,6 +41,10 @@ export interface AllPlayers {
 }
 
 // 前端接口
+/**
+ * @description 获取所有玩家(后端可查)
+ * @returns {Promise<AllPlayers>}
+ */
 export async function getPlayers(): Promise<AllPlayers> {
   const r = await fetch("/api/players");
   if (r.ok) {
@@ -44,6 +54,10 @@ export async function getPlayers(): Promise<AllPlayers> {
   return { human: [], online: [], local: [] };
 }
 
+/**
+ * @description 获取所有LLM提供方
+ * @returns {Promise<LLMProvider[]>}
+ */
 export async function getProviders(): Promise<LLMProvider[]> {
   const r = await fetch("/api/players/providers");
   if (r.ok) {
@@ -53,6 +67,12 @@ export async function getProviders(): Promise<LLMProvider[]> {
   return [];
 }
 
+/**
+ * @description 添加新玩家
+ * @param {string} type - 玩家类型
+ * @param {Omit<HumanPlayer | OnlinePlayer | LocalPlayer, "uuid">} player - 玩家数据
+ * @returns {Promise<HumanPlayer | OnlinePlayer | LocalPlayer | null>}
+ */
 export async function addPlayer(
   type: "human" | "online" | "local",
   player: Omit<HumanPlayer | OnlinePlayer | LocalPlayer, "uuid">
