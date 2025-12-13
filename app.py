@@ -1,4 +1,10 @@
 import eventlet
+from eventlet import patcher
+
+# Use original threading.Thread to ensure server runs in a real OS thread,
+# preventing blocking issues with native GUI loops (pywebview) or main thread exit.
+OriginalThread = patcher.original("threading").Thread
+
 eventlet.monkey_patch()
 
 import os
@@ -122,6 +128,22 @@ def open_browser_in_app_mode(url):
         webbrowser.open_new(url)
 
 
+import socket
+import time
+
+
+def wait_for_server(host, port, timeout=10):
+    """Wait for the server to be available."""
+    start_time = time.time()
+    while time.time() - start_time < timeout:
+        try:
+            with socket.create_connection((host, port), timeout=0.5):
+                return True
+        except (OSError, ConnectionRefusedError):
+            time.sleep(0.1)
+    return False
+
+
 def main():
     config = load_config()
     log.info(f"配置加载完成: {config}")
@@ -132,44 +154,79 @@ def main():
 
     override_index_zoom()
 
+    host = "127.0.0.1"
+    port = 5000
+    server_url = f"http://{host}:{port}"
+
     if DEBUG:
+        # In Debug mode, Flask's reloader will restart the process.
+        # We handle browser opening logic carefully.
+
         if MODE == "app":
             log.debug("测试浏览器APP模式.")
-            if not os.environ.get("WERKZEUG_RUN_MAIN"):
-                open_browser_in_app_mode("http://localhost:5000")
+            # Only open browser if this is the main process (before reload) OR if reloader is disabled
+            # But with reloader, the server starts in the child process.
+            # To avoid race condition, we should start a thread that waits for server then opens browser.
+
+            def open_browser_delayed():
+                if wait_for_server(host, port):
+                    open_browser_in_app_mode(server_url)
+                else:
+                    log.error("Server failed to start in time.")
+
+            # Only start this thread if we are in the reloader process (server is running)
+            # or if we are just starting and expect the server to come up.
+            # Common flask pattern: open browser in the main block if WERKZEUG_RUN_MAIN is set.
+
+            if os.environ.get("WERKZEUG_RUN_MAIN") == "true":
+                # Use OriginalThread to avoid interference with eventlet patching if any
+                OriginalThread(target=open_browser_delayed, daemon=True).start()
+
             try:
-                socketio.run(app, host="127.0.0.1", port=5000, debug=True)
+                socketio.run(app, host=host, port=port, debug=True)
             except SystemExit:
                 log.info("服务器已成功关闭")
 
         elif MODE == "browser":
             log.debug("测试浏览器普通模式.")
-            if not os.environ.get("WERKZEUG_RUN_MAIN"):
-                webbrowser.open_new("http://localhost:5000")
+
+            def open_browser_delayed():
+                if wait_for_server(host, port):
+                    webbrowser.open_new(server_url)
+
+            if os.environ.get("WERKZEUG_RUN_MAIN") == "true":
+                OriginalThread(target=open_browser_delayed, daemon=True).start()
+
             try:
-                socketio.run(app, host="127.0.0.1", port=5000, debug=True)
+                socketio.run(app, host=host, port=port, debug=True)
             except SystemExit:
                 log.info("服务器已成功关闭")
 
         elif MODE == "desktop":
             log.debug("测试桌面应用模式.")
             if webview:
-                t = threading.Thread(
+                # Desktop mode usually disables reloader to avoid pywebview issues
+                # Use OriginalThread to run server in a separate OS thread
+                t = OriginalThread(
                     target=lambda: socketio.run(
-                        app, host="127.0.0.1", port=5000, debug=True, use_reloader=False
+                        app, host=host, port=port, debug=True, use_reloader=False
                     )
                 )
                 t.daemon = True
                 t.start()
 
-                window = webview.create_window(
-                    "Ludus Engine",
-                    "http://localhost:5000",
-                    width=1280,
-                    height=800,
-                    zoomable=True,
-                )
-                webview.start()
+                if wait_for_server(host, port):
+                    window = webview.create_window(
+                        "Ludus Engine",
+                        server_url,
+                        width=1280,
+                        height=800,
+                        zoomable=True,
+                    )
+                    webview.start()
+                else:
+                    log.error("Server failed to start. Exiting.")
+                    return
 
             else:
                 log.warning("未检测到 pywebview, 无法启动桌面应用模式.")
@@ -180,40 +237,59 @@ def main():
             return
 
     else:
-        if webview:
+        # Non-Debug Mode
+        if webview and MODE == "desktop":
             log.info("检测到 pywebview, 启动桌面应用模式.")
             log.debug("启动服务器线程")
-            t = threading.Thread(
-                target=lambda: socketio.run(
-                    app, host="127.0.0.1", port=5000, debug=False
-                )
+            # Use OriginalThread to run server in a separate OS thread
+            t = OriginalThread(
+                target=lambda: socketio.run(app, host=host, port=port, debug=False)
             )
             t.daemon = True
             t.start()
 
-            log.debug("启动 webview 窗口")
-            window = webview.create_window(
-                "Ludus Engine",
-                "http://localhost:5000",
-                width=1280,
-                height=800,
-                zoomable=True,
-            )
-            webview.start()
+            log.debug("Waiting for server to be ready...")
+            if wait_for_server(host, port):
+                log.debug("Server ready, starting webview")
+                window = webview.create_window(
+                    "Ludus Engine",
+                    server_url,
+                    width=1280,
+                    height=800,
+                    zoomable=True,
+                )
+                webview.start()
+            else:
+                log.error("Server failed to start in time.")
 
         else:
-            log.info("未检测到 pywebview, 启动浏览器模式.")
-            log.debug("启动服务器线程")
-            t = threading.Thread(
-                target=lambda: socketio.run(
-                    app, host="127.0.0.1", port=5000, debug=False
-                )
+            # Browser or App mode (Non-Debug)
+            log.info(f"启动模式: {MODE}. 启动服务器线程...")
+            # Use OriginalThread
+            t = OriginalThread(
+                target=lambda: socketio.run(app, host=host, port=port, debug=False)
             )
             t.daemon = True
             t.start()
 
-            log.debug("启动浏览器线程")
-            open_browser_in_app_mode("http://localhost:5000")
+            log.debug("Waiting for server to be ready...")
+            if wait_for_server(host, port):
+                log.debug("Server ready, opening browser")
+                if MODE == "browser":
+                    webbrowser.open_new(server_url)
+                else:
+                    open_browser_in_app_mode(server_url)
+
+                # IMPORTANT: Keep the main thread alive!
+                # Since we are not using pywebview's blocking loop here,
+                # and the server is in a daemon thread, we must not exit.
+                try:
+                    while t.is_alive():
+                        t.join(1)
+                except KeyboardInterrupt:
+                    log.info("Stopping server...")
+            else:
+                log.error("Server failed to start in time.")
 
 
 if __name__ == "__main__":
