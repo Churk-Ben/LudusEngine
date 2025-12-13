@@ -5,12 +5,6 @@
       "type": "human",
       "prefixPrompt": "窝是人类喵, 窝说话不像你们一样有条理喵, 窝还是新手喵, 让让窝喵...",
       "uuid": "3146a9d0-2ac3-467f-b144-c02348e5f239"
-    },
-    {
-      "name": "111",
-      "type": "human",
-      "prefixPrompt": "111",
-      "uuid": "cc093401-fcba-4f3b-ad27-993c4355e624"
     }
   ],
   "online": [
@@ -37,6 +31,22 @@
       "model": "chat-v3",
       "apiKey": "rk_sdkjfsdfasfg",
       "uuid": "6ae44995-2829-4635-b7c3-f7dfd48b8e29"
+    },
+    {
+      "name": "Aurore",
+      "type": "online",
+      "providerId": "aiml",
+      "model": "chat-v3",
+      "apiKey": "ouinyavoepiuyhcmofser",
+      "uuid": "1c1b9b05-4d77-4069-9142-9c8b228300bd"
+    },
+    {
+      "name": "Eris",
+      "type": "online",
+      "providerId": "deepseek",
+      "model": "reasoner-r1",
+      "apiKey": "rk_diugfaoiugsebcjcahgiegca",
+      "uuid": "c7012994-695d-4db5-813d-7fc527fde836"
     }
   ],
   "local": [

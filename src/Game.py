@@ -60,13 +60,21 @@ class GamePhase:
 
 
 class Game(ABC):
-    def __init__(self, game_name: str, players_data: List[Dict[str, str]]):
+    def __init__(
+        self,
+        game_name: str,
+        players_data: List[Dict[str, str]],
+        event_emitter: Optional[Callable[[str, Optional[List[str]]], None]] = None,
+        input_handler: Optional[Callable[[str, str, str, List[str], bool], str]] = None,
+    ):
         self.game_name = game_name
         self.players: Dict[str, Player] = {}
         self.all_player_names: List[str] = [
             p.get("player_name", "") for p in players_data
         ]
         self._players_data = players_data
+        self.event_emitter = event_emitter
+        self.input_handler = input_handler
 
         # 初始化日志记录器
         self.logger = GameLogger(game_name, self._players_data)
@@ -222,6 +230,13 @@ class Game(ABC):
         # 记录到文件，带可见性范围
         self.logger.log_event(message, visible_to)
 
+        # 发送事件
+        if self.event_emitter:
+            try:
+                self.event_emitter(message, visible_to)
+            except Exception as e:
+                print(f"Error emitting event: {e}")
+
         # 打印到控制台
         # 注意：控制台输出通常显示管理员/旁观者的所有内容。
         # 如果我们想向控制台隐藏秘密，我们可以检查 visible_to。
@@ -320,6 +335,7 @@ class Game(ABC):
         candidates: List[str],
         prompts: Dict[str, str],
         retry_on_tie: bool = False,
+        max_retries: int = 5,
         visibility: Optional[List[str]] = None,
         prefix: str = "#:",
     ) -> Optional[str]:
@@ -336,6 +352,7 @@ class Game(ABC):
                 - 'result_out': 结果公告（必需，格式 {0}=target）
                 - 'result_tie': 平局公告（必需）
             retry_on_tie: 如果为 True，循环直到选出唯一的获胜者。
+            max_retries: 重试最大次数，防止死循环。
             visibility: 谁可以看到公告（None 表示公开）。
             prefix: 公告前缀。
 
@@ -345,6 +362,7 @@ class Game(ABC):
         if "start" in prompts:
             self.announce(prompts["start"], visibility, "#@")
 
+        retries = 0
         while True:
             votes = {name: 0 for name in candidates}
             for voter_name in voters:
@@ -385,4 +403,23 @@ class Game(ABC):
 
                 if not retry_on_tie:
                     return None
-                # 如果重试，循环继续
+
+                retries += 1
+                if retries >= max_retries:
+                    self.logger.system_logger.warning(
+                        "投票达到最大重试次数，将随机选择一个获胜者"
+                    )
+                    import random
+
+                    if targets:
+                        winner = random.choice(targets)
+                    else:
+                        winner = random.choice(candidates)
+
+                    if "result_out" in prompts:
+                        self.announce(
+                            prompts["result_out"].format(winner),
+                            visibility,
+                            "#@" if visibility else "#!",
+                        )
+                    return winner

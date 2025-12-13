@@ -52,10 +52,18 @@ def index_root():
 
 @app.get("/<path:path>")
 def serve_static(path):
+    log.debug(f"Request static file: {path}")
     target = STATIC_DIR / path
     if target.exists():
         return send_from_directory(app.static_folder, path)
+
+    # Fallback to index.html for SPA routing
+    # Check if the path looks like an API call or something that shouldn't fallback
+    if path.startswith("api/") or path.startswith("socket.io"):
+        return jsonify({"ok": False, "error": "Not Found"}), 404
+
     if (STATIC_DIR / "index.html").exists():
+        log.debug(f"Fallback to index.html for: {path}")
         return send_from_directory(app.static_folder, "index.html")
     return jsonify({"ok": True})
 
@@ -65,8 +73,10 @@ def serve_static(path):
 def on_connect():
     global connected_client_sid
     if connected_client_sid is not None:
-        log.warning(f"拒绝新的客户端连接, 因为已有连接: {connected_client_sid}")
-        return False  # 拒绝连接
+        log.warning(f"检测到新的客户端连接，替换旧连接: {connected_client_sid}")
+        # 这里我们允许新连接，并更新 connected_client_sid
+        # 旧连接断开时，我们需要确保不关闭服务器
+        pass
     connected_client_sid = request.sid
     log.info(f"客户端已连接, 会话ID: {connected_client_sid}")
     emit("server:ready", {"ok": True})
@@ -78,6 +88,10 @@ def on_disconnect():
     if request.sid == connected_client_sid:
         log.info(f"客户端 {request.sid} 已断开, 正在关闭服务器...")
         connected_client_sid = None
-        os.kill(os.getpid(), signal.SIGINT)
+        # 如果是调试模式或者浏览器模式，可能不希望立即关闭
+        if os.getenv("DEBUG_GAME", "0") == "0":  # 仅在非调试模式下关闭
+            os.kill(os.getpid(), signal.SIGINT)
+        else:
+            log.info("Debug 模式下保持服务器运行")
     else:
-        log.warning(f"一个未被追踪的客户端 {request.sid} 已断开.")
+        log.warning(f"一个旧的或未被追踪的客户端 {request.sid} 已断开.")

@@ -264,6 +264,7 @@ onMounted(() => {
       players.value = data;
     },
     onMessage: async (data: ChatMessage) => {
+      console.log("Received message:", data);
       const shouldScroll = isAtBottom.value;
       messages.value.push(data);
       // 滚动到最底部
@@ -333,7 +334,8 @@ function sendMessage() {
     sendChatMessage(
       socket,
       players.value.find((p) => p.type === "human")!,
-      inputValue.value
+      inputValue.value,
+      initialSessionId
     );
     inputValue.value = "";
   } else {

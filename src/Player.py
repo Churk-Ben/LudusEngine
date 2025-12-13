@@ -11,12 +11,16 @@ class Player:
         config_data: Dict[str, Any],
         prompts: Dict[str, str],
         game_logger=None,
+        input_handler=None,
+        event_emitter=None,
     ):
         self.name = name
         self.role = role
         self.config = config_data
         self.prompts = prompts
         self.game_logger = game_logger
+        self.input_handler = input_handler
+        self.event_emitter = event_emitter
 
         self.is_human = self.config.get("human", False)
         self.is_alive = True
@@ -30,10 +34,17 @@ class Player:
         self.game_logger = logger
 
     def call_ai_response(self, prompt_text: str, valid_choices: List[str]):
+        # 增加思考延迟，提升游戏节奏感
+        import time
+        import random
+
+        delay = random.uniform(1.5, 3.0)
+        if self.event_emitter:
+            self.event_emitter(f"{self.name} 正在思考...", None)
+        time.sleep(delay)
+
         # 检查环境或配置中的调试标志，这里我们假设通过配置或 os 传递
         if os.getenv("DEBUG_GAME", "0") == "1":
-            import random
-
             return random.choice(valid_choices)
 
         history = []
@@ -81,13 +92,22 @@ class Player:
             ai_choice = response.choices[0].message.content
             for choice in valid_choices:
                 if choice in ai_choice:
+                    if self.game_logger:
+                        self.game_logger.system_logger.info(
+                            f"Player {self.name} (AI) chose: {choice}"
+                        )
                     return choice
             # 兜底
             import random
 
             return random.choice(valid_choices)
         except Exception as e:
-            print(f"AI Error: {e}")
+            if self.game_logger:
+                self.game_logger.system_logger.error(
+                    f"AI Error in call_ai_response: {e}"
+                )
+            else:
+                print(f"AI Error: {e}")
             import random
 
             return random.choice(valid_choices)
@@ -95,6 +115,30 @@ class Player:
     def call_human_response(
         self, prompt_text: str, valid_choices: List[str], allow_skip: bool = False
     ):
+        if self.input_handler:
+            while True:
+                response = self.input_handler(
+                    self.name, "choice", prompt_text, valid_choices, allow_skip
+                )
+
+                # 验证输入
+                if allow_skip and response.lower() == "skip":
+                    return "skip"
+
+                if response in valid_choices:
+                    return response
+
+                # 如果输入是索引（数字），尝试转换
+                if response.isdigit():
+                    idx = int(response) - 1
+                    if 0 <= idx < len(valid_choices):
+                        return valid_choices[idx]
+
+                # 如果都不匹配，发送错误提示并重试
+                # 注意：我们需要一种方式通知玩家输入无效。
+                # 简单起见，我们可以再次调用 input_handler，并在 prompt 中加入错误提示
+                prompt_text = f"[无效输入，请重试] {prompt_text}"
+
         while True:
             print(prompt_text)
             display_choices = list(valid_choices)
@@ -122,8 +166,18 @@ class Player:
             print("[bold red]无效的选择, 请重新输入. [/bold red]")
 
     def call_ai_speak(self, prompt_text: str):
+        import time
+        import random
+
+        delay = random.uniform(2.0, 4.0)
+        if self.event_emitter:
+            self.event_emitter(f"{self.name} 正在组织语言...", None)
+        else:
+            print(f"{self.name} 正在思考...")
+        time.sleep(delay)
+
         if os.getenv("DEBUG_GAME", "0") == "1":
-            return "ai_response<br>, and <strong>ai_response</strong>"
+            return "ai_response (debug)"
 
         history = []
         if self.game_logger:
@@ -151,7 +205,6 @@ class Player:
         history.append({"role": "system", "content": self.prompt})
         history.append({"role": "user", "content": prompt_text})
 
-        print(f"{self.name} 正在思考...")
         try:
             response = completion(
                 model=self.config.get("model", "gpt-3.5-turbo"),
@@ -159,11 +212,19 @@ class Player:
                 stream=False,
             )
             speech = response.choices[0].message.content
+            if self.game_logger:
+                self.game_logger.system_logger.info(
+                    f"Player {self.name} (AI) generated speech"
+                )
             return speech
         except Exception as e:
+            if self.game_logger:
+                self.game_logger.system_logger.error(f"AI Error in call_ai_speak: {e}")
             return f"(生成演讲时出错: {e})"
 
     def call_human_speak(self, prompt_text: str):
+        if self.input_handler:
+            return self.input_handler(self.name, "speech", prompt_text, [], False)
         return input(prompt_text)
 
     def speak(self, prompt_text: str):

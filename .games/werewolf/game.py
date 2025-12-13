@@ -381,8 +381,13 @@ class DayVoteAction(GameAction):
 
 
 class WerewolfGame(Game):
-    def __init__(self, players: List[Dict[str, str]]):
-        super().__init__("werewolf", players)
+    def __init__(
+        self,
+        players: List[Dict[str, str]],
+        event_emitter=None,
+        input_handler=None,
+    ):
+        super().__init__("werewolf", players, event_emitter, input_handler)
         self.roles: Dict[str, int] = {}
         self.killed_player: Optional[str] = None
         self.last_guarded: Optional[str] = None
@@ -472,7 +477,15 @@ class WerewolfGame(Game):
 
         for name, role in zip(self.all_player_names, role_list):
             p_config = player_config_map.get(name, {})
-            player = Player(name, role, p_config, prompts, self.logger)
+            player = Player(
+                name,
+                role,
+                p_config,
+                prompts,
+                self.logger,
+                self.input_handler,
+                self.event_emitter,
+            )
             self.players[name] = player
 
         werewolves = self.get_alive_players([Role.WEREWOLF])

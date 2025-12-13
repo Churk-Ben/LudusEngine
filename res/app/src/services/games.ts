@@ -9,7 +9,7 @@ export interface GameInfo {
 export interface Player {
     id: string;
     name: string;
-    type: "human" | "online" | "local";
+    type: "human" | "online" | "local" | "system";
     data?: any;
 }
 
@@ -52,6 +52,7 @@ export async function getGames(): Promise<string[]> {
 }
 
 export function joinGame(socket: Socket, callbacks: GameCallbacks) {
+    console.log("Registering game socket events");
     socket.on("game:info", callbacks.onInfo);
     socket.on("game:players", callbacks.onPlayers);
     socket.on("game:message", callbacks.onMessage);
@@ -65,6 +66,6 @@ export function leaveGame(socket: Socket) {
     socket.off("game:notification");
 }
 
-export function sendChatMessage(socket: Socket, sender: Player, content: string) {
-    socket.emit("game:chat", { "sender": sender, "content": content });
+export function sendChatMessage(socket: Socket, sender: Player, content: string, sessionId?: string) {
+    socket.emit("game:chat", { "sender": sender, "content": content, "sessionId": sessionId });
 }
