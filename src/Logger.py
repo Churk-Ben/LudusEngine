@@ -1,7 +1,7 @@
 # ------------------------------
 # @author: Churk
 # @description: 日志模块
-# @completed
+# @not completed yet
 # ------------------------------
 
 import functools
@@ -23,9 +23,7 @@ DEFAULT_LOGFILE = LOG_DIR / "ludus.log"
 FORMATTER = logging.Formatter(
     "%(asctime)s [%(levelname)s] %(name)s - %(message)s", "%Y-%m-%d %H:%M:%S"
 )
-GAMES_LOG_FORMATTER = logging.Formatter(
-    "[%(asctime)s] %(name)s : %(message)s", "%m-%d %H:%M:%S"
-)
+GAMES_LOG_FORMATTER = logging.Formatter("[%(asctime)s] %(message)s", "%m-%d %H:%M:%S")
 
 os.makedirs(LOG_DIR, exist_ok=True)
 os.makedirs(GAMES_LOG_DIR, exist_ok=True)
@@ -175,7 +173,7 @@ class GameLogger:
 
     def log_event(self, message: str, visible_to: List[str] = None):
         if visible_to:
-            self.system_logger.info(f"[Limited to {visible_to}] {message}")
+            self.system_logger.info(f"[visible to {visible_to}] {message}")
             for p_name in visible_to:
                 logger = self.loggers.get(p_name)
                 if logger:
