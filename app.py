@@ -1,18 +1,19 @@
-import eventlet
-from eventlet import patcher
-
+from gevent import monkey
 
 # 获取原生的 threading.Thread 类
 # 为什么要这样做？
-# 因为 eventlet.monkey_patch() 会把标准的 threading.Thread 替换成 GreenThread（协程）。
+# 因为 monkey.patch_all() 会把标准的 threading.Thread 替换成 GreenThread（协程）。
 # 而我们需要一个真正的操作系统线程 (OS Thread) 来运行服务器，
 # 这样服务器才能独立于主线程（GUI线程）运行，避免被 GUI 循环阻塞导致黑屏。
 # 使用继承方式定义，解决 IDE 代码高亮将其识别为变量的问题
-class OriginalThread(patcher.original("threading").Thread):
+_original_Thread = monkey.get_original("threading", "Thread")
+
+
+class OriginalThread(_original_Thread):
     pass
 
 
-eventlet.monkey_patch()
+monkey.patch_all()
 import os
 import time
 import platform
