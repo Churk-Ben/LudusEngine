@@ -29,7 +29,7 @@ CORS(app)
 socketio = SocketIO(
     app,
     cors_allowed_origins="*",
-    async_mode="gevent",
+    async_mode="threading",
 )
 
 # 初始化游戏Socket事件
