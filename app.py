@@ -1,28 +1,31 @@
-import os
-from pathlib import Path
-import platform
-import socket
-import threading
-import time
-import webbrowser
-
 import eventlet
 from eventlet import patcher
+
+
+# 获取原生的 threading.Thread 类
+# 为什么要这样做？
+# 因为 eventlet.monkey_patch() 会把标准的 threading.Thread 替换成 GreenThread（协程）。
+# 而我们需要一个真正的操作系统线程 (OS Thread) 来运行服务器，
+# 这样服务器才能独立于主线程（GUI线程）运行，避免被 GUI 循环阻塞导致黑屏。
+# 使用继承方式定义，解决 IDE 代码高亮将其识别为变量的问题
+class OriginalThread(patcher.original("threading").Thread):
+    pass
+
+
+eventlet.monkey_patch()
+import os
+import time
+import platform
+import socket
+from pathlib import Path
+import webbrowser
 
 from src.Config import load_config
 from src.Logger import get_logger
 from src.Server import app, socketio
 
 log = get_logger("APP")
-
-# Use original threading.Thread to ensure server runs in a real OS thread,
-# preventing blocking issues with native GUI loops (pywebview) or main thread exit.
-# 这里是一些我看不懂的转换... 先这么放着
 log.info("开始初始化应用...")
-OriginalThread = patcher.original("threading").Thread
-
-eventlet.monkey_patch()
-
 log.debug("尝试导入 webview...")
 try:
     import webview

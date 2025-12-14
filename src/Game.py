@@ -96,6 +96,8 @@ class Game(ABC):
     def run_phase(self, phase: GamePhase):
         """运行单个游戏阶段。"""
         for step in phase.steps:
+            if not self._running:
+                return
             if self.check_game_over():
                 return
 

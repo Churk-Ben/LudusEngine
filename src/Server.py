@@ -98,6 +98,7 @@ def on_disconnect():
         else:
             # 正常退出
             log.info("正在停止服务器...")
+            os._exit(0)
             os.kill(os.getpid(), signal.SIGINT)
     else:
         log.warning(f"一个旧的或未被追踪的客户端 {request.sid} 已断开.")
