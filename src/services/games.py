@@ -1,11 +1,10 @@
 import datetime
-import os
-import time
-import threading
-import queue
 import importlib.util
-import sys
+import os
 from pathlib import Path
+import queue
+import sys
+import threading
 
 from flask import Blueprint, jsonify, request
 from flask_socketio import SocketIO, emit, join_room, leave_room
@@ -26,11 +25,17 @@ game_sessions = {}
 _socketio_instance = None
 
 
+class GameStopError(Exception):
+    """当游戏被手动停止时抛出此异常"""
+
+    pass
+
+
 def load_game_class(game_name):
-    """Dynamically load game class from .games directory"""
+    """从.games目录动态加载游戏类"""
     game_path = GAMES_DIR / game_name / "game.py"
     if not game_path.exists():
-        raise FileNotFoundError(f"Game {game_name} not found at {game_path}")
+        raise FileNotFoundError(f"在目录 {GAMES_DIR} 中未找到游戏 {game_name}")
 
     spec = importlib.util.spec_from_file_location(f"games.{game_name}", game_path)
     module = importlib.util.module_from_spec(spec)
@@ -40,7 +45,7 @@ def load_game_class(game_name):
     # Return the 'Game' class or attribute from the module
     if hasattr(module, "Game"):
         return getattr(module, "Game")
-    raise AttributeError(f"Module {game_name} does not have 'Game' class")
+    raise AttributeError(f"在模块 {game_name} 中未找到 'Game' 类")
 
 
 def make_event_emitter(session_id, socketio):
@@ -53,8 +58,8 @@ def make_event_emitter(session_id, socketio):
             "visible_to": visible_to,
         }
         # 如果指定了可见性，可能需要更复杂的逻辑，目前广播到房间
-        # TODO: Implement private messaging based on visible_to
-        games_log.info(f"Emitting message to {session_id}: {message}")
+        # TODO: 基于 visible_to 筛选目标客户端
+        games_log.info(f"向 {session_id} 发送消息: {message}")
         socketio.emit("game:message", msg, room=session_id)
 
     return emitter
@@ -78,7 +83,7 @@ def make_input_handler(session_id, input_queues, socketio):
             "game:message",
             {
                 "sender": {"name": "System", "id": "system", "type": "system"},
-                "content": f"Waiting for {player_name}: {prompt}",
+                "content": f"等待 {player_name} 输入: {prompt}",
                 "time": datetime.datetime.now().strftime("%H:%M:%S"),
             },
             room=session_id,
@@ -89,9 +94,14 @@ def make_input_handler(session_id, input_queues, socketio):
             input_queues[player_name] = queue.Queue()
 
         # 阻塞等待输入
-        games_log.info(f"Waiting input from {player_name} for session {session_id}")
+        games_log.info(f"等待 {player_name} 输入, 会话ID: {session_id}")
         response = input_queues[player_name].get()
-        games_log.info(f"Received input from {player_name}: {response}")
+
+        if response == "__GAME_STOP__":
+            games_log.info(f"游戏手动停止, 会话ID: {session_id}")
+            raise GameStopError()
+
+        games_log.info(f"从 {player_name} 接收输入: {response}")
         return response
 
     return handler
@@ -162,6 +172,7 @@ def socket_on_init_game(data):
                     "name": name,
                     "type": p_type,
                     "data": {},
+                    # TODO: 向特定玩家注入data
                 }
             )
 
@@ -178,12 +189,12 @@ def socket_on_init_game(data):
         # 注意：这里我们需要传入 emitter 和 input_handler
         # 此时我们需要 socketio 实例来创建 emitter
         if _socketio_instance is None:
-            games_log.error("SocketIO instance not initialized")
+            games_log.error("SocketIO 实例未初始化")
             emit(
                 "game:notification",
                 {
                     "type": "error",
-                    "content": "Server internal error: SocketIO not ready",
+                    "content": "服务器内部错误: SocketIO 未初始化",
                 },
             )
             return
@@ -198,22 +209,29 @@ def socket_on_init_game(data):
         # 启动游戏线程
         def run_game_wrapper():
             try:
-                games_log.info(f"Starting game loop for session {session_id}")
+                games_log.info(f"开始游戏循环, 会话ID: {session_id}")
                 game.run_game()
-                games_log.info(f"Game loop finished for session {session_id}")
+                games_log.info(f"游戏循环结束, 会话ID: {session_id}")
                 _socketio_instance.emit(
                     "game:info",
                     {"status": "游戏结束", "statusType": "info"},
                     room=session_id,
                 )
+            except GameStopError:
+                games_log.info(f"游戏会话 {session_id} 手动停止")
+                _socketio_instance.emit(
+                    "game:info",
+                    {"status": "游戏已停止", "statusType": "warning"},
+                    room=session_id,
+                )
             except Exception as e:
-                games_log.error(f"Game runtime error: {e}")
+                games_log.error(f"游戏运行时错误: {e}")
                 import traceback
 
                 traceback.print_exc()
                 _socketio_instance.emit(
                     "game:notification",
-                    {"type": "error", "content": f"Game Error: {e}"},
+                    {"type": "error", "content": f"游戏运行时错误: {e}"},
                     room=session_id,
                 )
 
@@ -229,12 +247,13 @@ def socket_on_init_game(data):
             "thread": thread,
             "queues": input_queues,
         }
+        games_log.info(f"游戏会话 {session_id} 已初始化")
+        games_log.debug(f"当前线程池: {threading.enumerate()}")
 
         # 将当前 socket 加入房间
         # 注意: socket_on_init_game 是在请求上下文中调用的，所以可以使用 flask_socketio.join_room
         join_room(session_id)
-        games_log.info(f"Socket {request.sid} joined room {session_id}")
-
+        games_log.debug(f"Socket {request.sid} 加入房间 {session_id}")
         games_log.info(f"游戏会话 {session_id} 线程已启动")
 
         # 回复客户端
@@ -242,10 +261,13 @@ def socket_on_init_game(data):
             "game:notification",
             {"type": "success", "content": f"游戏 {game_id} 初始化成功"},
         )
-        emit("game:info", {"status": "游戏进行中", "statusType": "success"})
+        emit(
+            "game:info",
+            {"status": "游戏进行中", "statusType": "success"},
+        )
 
     except Exception as e:
-        games_log.error(f"Failed to start game: {e}")
+        games_log.error(f"启动游戏 {game_id} 失败: {e}")
         import traceback
 
         traceback.print_exc()
@@ -267,6 +289,7 @@ def socket_on_game_chat(data):
         "content": content,
         "time": datetime.datetime.now().strftime("%H:%M:%S"),
     }
+    games_log.debug(f"收到游戏聊天消息 - 发送者: {sender_name}, 内容: {content}")
 
     # 广播给所有人
     # 如果有 session_id，广播到房间
@@ -283,15 +306,13 @@ def socket_on_game_chat(data):
                 # 只有当队列为空（正在等待）时才放入？
                 # 或者直接放入，游戏那边会取
                 # 为了防止多余的聊天信息干扰，这里可以做得更细致，但目前假设所有聊天都是输入
-                games_log.info(
-                    f"Routing input to player {sender_name} in session {session_id}"
-                )
+                games_log.info(f"路由输入到玩家 {sender_name} 在会话 {session_id}")
                 queues[sender_name].put(content)
             else:
-                games_log.debug(f"Player {sender_name} has no active input queue")
+                games_log.debug(f"玩家 {sender_name} 没有活跃的输入队列")
     else:
         # 降级：广播给所有连接的客户端（不推荐，但作为 fallback）
-        games_log.warning("No sessionId in chat, broadcasting to all")
+        games_log.warning("没有 sessionId 在聊天中，广播给所有连接的客户端")
         emit("game:message", msg, broadcast=True)
 
 
@@ -303,14 +324,22 @@ def socket_on_game_leave(data):
         # 优雅停止游戏线程
         session = game_sessions[session_id]
         if "game" in session and hasattr(session["game"], "stop_game"):
-             session["game"].stop_game()
-        
+            session["game"].stop_game()
+
+        # 解除所有输入队列的阻塞
+        if "queues" in session:
+            for q_name, q in session["queues"].items():
+                games_log.info(f"向会话 {session_id} 的队列 {q_name} 放入停止信号")
+                q.put("__GAME_STOP__")
+
         # 不立即删除，等待线程结束？或者直接删除，线程会因为 _running False 而退出
         # 这里为了安全，我们还是删除引用
         del game_sessions[session_id]
         games_log.info(f"游戏会话 {session_id} 已标记停止并移除")
+        games_log.debug(f"当前线程池: {threading.enumerate()}")
 
     leave_room(session_id)
+    games_log.debug(f"Socket {request.sid} 从房间 {session_id} 退出")
 
 
 def init_game_socket_events(socketio: SocketIO):
