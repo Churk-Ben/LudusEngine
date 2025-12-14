@@ -27,7 +27,7 @@ class ActionContext:
 
 
 class GameAction(ABC):
-    """在 DSL 中定义的游戏动作抽象基类。"""
+    """在 DSL 中定义的游戏动作抽象基类."""
 
     @abstractmethod
     def execute(self, context: ActionContext) -> Any:
@@ -40,7 +40,7 @@ class GameAction(ABC):
 
 @dataclass
 class GameStep:
-    """游戏阶段中的单个步骤（例如 '狼人醒来'）。"""
+    """游戏阶段中的单个步骤 (例如 '狼人醒来') ."""
 
     name: str
     roles_involved: List[Any]
@@ -50,7 +50,7 @@ class GameStep:
 
 @dataclass
 class GamePhase:
-    """由多个步骤组成的游戏阶段（例如 '夜晚', '白天'）。"""
+    """由多个步骤组成的游戏阶段 (例如 '夜晚', '白天') ."""
 
     name: str
     steps: List[GameStep] = field(default_factory=list)
@@ -86,15 +86,15 @@ class Game(ABC):
     def stop_game(self):
         """停止游戏运行"""
         self._running = False
-        self.logger.system_logger.info("Game stop requested.")
+        self.logger.system_logger.info("接收到游戏停止请求")
 
     @abstractmethod
     def _init_phases(self):
-        """初始化游戏阶段和步骤。"""
+        """初始化游戏阶段和步骤."""
         pass
 
     def run_phase(self, phase: GamePhase):
-        """运行单个游戏阶段。"""
+        """运行单个游戏阶段."""
         for step in phase.steps:
             if not self._running:
                 return
@@ -114,11 +114,11 @@ class Game(ABC):
 
     @abstractmethod
     def setup_game(self):
-        """加载配置并初始化玩家/角色。"""
+        """加载配置并初始化玩家/角色."""
         pass
 
     def run_game(self):
-        """主游戏循环。"""
+        """主游戏循环."""
         self.setup_game()
         self._init_phases()  # 确保阶段已初始化
 
@@ -132,8 +132,8 @@ class Game(ABC):
 
     def get_alive_players(self, allowed_roles: Optional[List[Any]] = None) -> List[str]:
         """
-        获取存活玩家的姓名。
-        allowed_roles: 角色值列表（可以是 Enum 成员或字符串）。
+        获取存活玩家的姓名.
+        allowed_roles: 角色值列表 (可以是 Enum 成员或字符串) .
         """
         alive_players = []
 
@@ -153,8 +153,8 @@ class Game(ABC):
 
     def get_player_by_role(self, role: Any) -> Optional[Player]:
         """
-        查找具有给定角色的第一个存活玩家。
-        role: 可以是 Enum 成员或字符串。
+        查找具有给定角色的第一个存活玩家.
+        role: 可以是 Enum 成员或字符串.
         """
         role_value = role.value if hasattr(role, "value") else role
         for p in self.players.values():
@@ -164,9 +164,9 @@ class Game(ABC):
 
     def load_basic_config(self, game_dir: Path) -> Tuple[Dict, Dict, Dict[str, Dict]]:
         """
-        从游戏目录加载 config.json 和 prompt.json。
-        将配置中的玩家数据与初始玩家数据合并。
-        返回 (config, prompts, player_config_map)。
+        从游戏目录加载 config.json 和 prompt.json.
+        将配置中的玩家数据与初始玩家数据合并.
+        返回 (config, prompts, player_config_map).
         """
         config_path = game_dir / "config.json"
         prompt_path = game_dir / "prompt.json"
@@ -178,7 +178,7 @@ class Game(ABC):
         try:
             with open(config_path, "r", encoding="utf-8") as file:
                 config = json.load(file)
-                # 如果 __init__ 中未提供玩家，则从配置加载
+                # 如果 __init__ 中未提供玩家, 则从配置加载
                 if not self._players_data:
                     player_configs = config.get("players", [])
                     self._players_data = []
@@ -187,7 +187,7 @@ class Game(ABC):
                             {
                                 "player_name": p["name"],
                                 "player_uuid": p.get("uuid", p["name"]),
-                                # 如果需要，合并其他配置
+                                # 如果需要, 合并其他配置
                                 **p,
                             }
                         )
@@ -214,8 +214,8 @@ class Game(ABC):
 
         except (FileNotFoundError, KeyError, ValueError) as e:
             self.logger.system_logger.error(f"配置文件或提示词文件有错: {str(e)}")
-            # 如果出错，我们可能会返回空字典或重新引发异常
-            # 目前，打印错误由 logger 处理，但我们需要确保返回值有效
+            # 如果出错, 我们可能会返回空字典或重新引发异常
+            # 目前, 打印错误由 logger 处理, 但我们需要确保返回值有效
             pass
 
         except Exception as e:
@@ -228,16 +228,16 @@ class Game(ABC):
         self, message: str, visible_to: Optional[List[str]] = None, prefix: str = "#:"
     ):
         """
-        封装的游戏公告处理方法。
-        它打印到控制台（标准输出）并将事件记录到游戏日志记录器。
+        封装的游戏公告处理方法.
+        它打印到控制台 (标准输出) 并将事件记录到游戏日志记录器.
 
         Args:
-            message (str): 公告内容。
-            visible_to (Optional[List[str]]): 可以看到此消息的玩家名称列表。
-                                              如果为 None，则为公开（所有玩家）。
-            prefix (str): 控制台输出的前缀字符串（例如 '#:', '#@', '#!'）。
+            message (str): 公告内容.
+            visible_to (Optional[List[str]]): 可以看到此消息的玩家名称列表.
+                                              如果为 None, 则为公开 (所有玩家).
+            prefix (str): 控制台输出的前缀字符串 (例如 '#:', '#@', '#!') .
         """
-        # 记录到文件，带可见性范围
+        # 记录到文件, 带可见性范围
         self.logger.log_event(message, visible_to)
 
         # 发送事件
@@ -245,17 +245,22 @@ class Game(ABC):
             try:
                 self.event_emitter(message, visible_to)
             except Exception as e:
-                print(f"Error emitting event: {e}")
+                # 防止循环触发, 且防止由于logger错误
+                if "announce" not in str(e):
+                    self.logger.system_logger.error(f"发送公告事件时出错: {e}")
+                    print(f"发送公告事件时出错: {e}")
 
         # 打印到控制台
-        # 注意：控制台输出通常显示管理员/旁观者的所有内容。
-        # 如果我们想向控制台隐藏秘密，我们可以检查 visible_to。
-        # 但目前，我们假设控制台是“上帝视角”。
+        # 注意：控制台输出通常显示管理员/旁观者的所有内容.
+        # 如果我们想向控制台隐藏秘密, 我们可以检查 visible_to.
+        # 但目前, 我们假设控制台是“上帝视角”.
 
         if visible_to:
-            # 如果可见性受限，可能需要在控制台中指出
+            # 如果可见性受限, 可能需要在控制台中指出
+            self.logger.system_logger.info(f"公告: {message} (仅对 {visible_to} 可见)")
             print(f"{prefix} [Visible to {visible_to}] {message}")
         else:
+            self.logger.system_logger.info(f"公告: {message} (公开)")
             print(f"{prefix} {message}")
 
     def process_discussion(
@@ -269,22 +274,22 @@ class Game(ABC):
         prefix: str = "#:",
     ):
         """
-        处理讨论阶段。
+        处理讨论阶段.
 
         Args:
-            participants: 可以发言的玩家姓名列表。
+            participants: 可以发言的玩家姓名列表.
             prompts: 包含提示模板的字典：
-                - 'start': 开始时的公告（可选）
-                - 'prompt': 玩家的输入提示（必需，格式 {0}=name）
-                - 'speech': 演讲公告（必需，格式 {0}=name, {1}=content）
-                - 'ready_msg': 玩家准备好时的公告（可选，格式 {0}=name, {1}=ready_count, {2}=total）
-                - 'timeout': 达到最大轮次时的公告（可选，格式 {0}=max_rounds）
-                - 'alive_players': 存活玩家公告（可选，格式 {0}=joined_names）
-            max_rounds: 最大讨论轮数。
-            enable_ready_check: 如果为 True，输入 '0' 标记玩家准备结束讨论。
-            shuffle_order: 如果为 True，每轮随机打乱发言顺序。
-            visibility: 谁可以看到公告（None 表示公开）。
-            prefix: 公告前缀。
+                - 'start': 开始时的公告 (可选)
+                - 'prompt': 玩家的输入提示 (必需, 格式 {0}=name)
+                - 'speech': 演讲公告 (必需, 格式 {0}=name, {1}=content)
+                - 'ready_msg': 玩家准备好时的公告 (可选, 格式 {0}=name, {1}=ready_count, {2}=total)
+                - 'timeout': 达到最大轮次时的公告 (可选, 格式 {0}=max_rounds)
+                - 'alive_players': 存活玩家公告 (可选, 格式 {0}=joined_names)
+            max_rounds: 最大讨论轮数.
+            enable_ready_check: 如果为 True, 输入 '0' 标记玩家准备结束讨论.
+            shuffle_order: 如果为 True, 每轮随机打乱发言顺序.
+            visibility: 谁可以看到公告 (None 表示公开) .
+            prefix: 公告前缀.
         """
         if "start" in prompts:
             self.announce(prompts["start"], visibility, "#@")
@@ -354,24 +359,24 @@ class Game(ABC):
         prefix: str = "#:",
     ) -> Optional[str]:
         """
-        处理投票阶段。
+        处理投票阶段.
 
         Args:
-            voters: 投票的玩家姓名列表。
-            candidates: 可以被投票的玩家姓名列表。
+            voters: 投票的玩家姓名列表.
+            candidates: 可以被投票的玩家姓名列表.
             prompts: 包含提示模板的字典：
-                - 'start': 开始时的公告（可选）
-                - 'prompt': 投票者的输入提示（必需，格式 {0}=name）
-                - 'action': 投票动作公告（必需，格式 {0}=voter, {1}=target）
-                - 'result_out': 结果公告（必需，格式 {0}=target）
-                - 'result_tie': 平局公告（必需）
-            retry_on_tie: 如果为 True，循环直到选出唯一的获胜者。
-            max_retries: 重试最大次数，防止死循环。
-            visibility: 谁可以看到公告（None 表示公开）。
-            prefix: 公告前缀。
+                - 'start': 开始时的公告 (可选)
+                - 'prompt': 投票者的输入提示 (必需, 格式 {0}=name)
+                - 'action': 投票动作公告 (必需, 格式 {0}=voter, {1}=target)
+                - 'result_out': 结果公告 (必需, 格式 {0}=target)
+                - 'result_tie': 平局公告 (必需)
+            retry_on_tie: 如果为 True, 循环直到选出唯一的获胜者.
+            max_retries: 重试最大次数, 防止死循环.
+            visibility: 谁可以看到公告 (None 表示公开) .
+            prefix: 公告前缀.
 
         Returns:
-            选定目标的名称，如果没有结果/平局（且不重试）则为 None。
+            选定目标的名称, 如果没有结果/平局 (且不重试) 则为 None.
         """
         if "start" in prompts:
             self.announce(prompts["start"], visibility, "#@")
@@ -404,7 +409,7 @@ class Game(ABC):
             if len(targets) == 1:
                 winner = targets[0]
                 if "result_out" in prompts:  # 或 result_win
-                    # 先尝试 result_out，通用键
+                    # 先尝试 result_out, 通用键
                     self.announce(
                         prompts["result_out"].format(winner),
                         visibility,
@@ -421,7 +426,7 @@ class Game(ABC):
                 retries += 1
                 if retries >= max_retries:
                     self.logger.system_logger.warning(
-                        "投票达到最大重试次数，将随机选择一个获胜者"
+                        "投票达到最大重试次数, 将随机选择一个获胜者"
                     )
                     import random
 
