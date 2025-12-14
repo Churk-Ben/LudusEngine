@@ -27,7 +27,7 @@ const i18n = createI18n({
 
 const envAny = (import.meta as any).env || {};
 const isDev = !!envAny?.DEV;
-const socketUrl = envAny?.VITE_SOCKET_URL || (isDev ? "http://127.0.0.1:5000" : window.location.origin || "http://127.0.0.1:5000");
+const socketUrl = envAny?.VITE_SOCKET_URL || (isDev ? "http://127.0.0.1:31722" : window.location.origin || "http://127.0.0.1:31722");
 const socket: Socket = io(socketUrl, {
 	autoConnect: true,
 	transports: ["websocket", "polling"],

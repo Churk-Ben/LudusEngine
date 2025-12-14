@@ -1,22 +1,29 @@
+import os
+from pathlib import Path
+import platform
+import socket
+import threading
+import time
+import webbrowser
+
 import eventlet
 from eventlet import patcher
-
-# Use original threading.Thread to ensure server runs in a real OS thread,
-# preventing blocking issues with native GUI loops (pywebview) or main thread exit.
-OriginalThread = patcher.original("threading").Thread
-
-eventlet.monkey_patch()
-
-import os
-import platform
-import threading
-import webbrowser
-from pathlib import Path
 
 from src.Config import load_config
 from src.Logger import get_logger
 from src.Server import app, socketio
 
+log = get_logger("APP")
+
+# Use original threading.Thread to ensure server runs in a real OS thread,
+# preventing blocking issues with native GUI loops (pywebview) or main thread exit.
+# 这里是一些我看不懂的转换... 先这么放着
+log.info("开始初始化应用...")
+OriginalThread = patcher.original("threading").Thread
+
+eventlet.monkey_patch()
+
+log.debug("尝试导入 webview...")
 try:
     import webview
 except ImportError:
@@ -25,7 +32,7 @@ except ImportError:
 BASE = Path(__file__).resolve().parent
 STATIC_DIR = BASE / "res" / "app" / "static"
 
-log = get_logger("APP")
+
 log.info("-" * 80)
 log.info(f"操作系统 - System: {platform.system()}")
 log.info(f"操作系统版本 - Release: {platform.release()}")
@@ -83,7 +90,7 @@ def override_index_zoom():
         log.warning(f"应用缩放配置时发生错误: {e}")
 
 
-def open_browser_in_app_mode(url):
+def open_in_app_mode(url):
     if platform.system() == "Windows":
         log.info(f"Windows 系统, 尝试app模式开启应用.")
         browser_list = [
@@ -128,16 +135,14 @@ def open_browser_in_app_mode(url):
         webbrowser.open_new(url)
 
 
-import socket
-import time
-
-
 def wait_for_server(host, port, timeout=10):
-    """Wait for the server to be available."""
+    """等待服务器就绪"""
+    log.info(f"等待服务器 {host}:{port} 就绪, 超时 {timeout} 秒...")
     start_time = time.time()
     while time.time() - start_time < timeout:
         try:
             with socket.create_connection((host, port), timeout=0.5):
+                log.info(f"服务器 {host}:{port} 已就绪.")
                 return True
         except (OSError, ConnectionRefusedError):
             time.sleep(0.1)
@@ -148,31 +153,33 @@ def main():
     config = load_config()
     log.info(f"配置加载完成: {config}")
 
-    DEBUG = os.getenv("debug", "0") == "1"
-    MODE = os.getenv("mode", "app")
-    log.info(f"DEBUG 模式: {DEBUG}, 运行模式: {MODE}")
+    DEBUG_APP = os.getenv("DEBUG_APP", "0") == "1"
+    MODE = os.getenv("MODE", "desktop")
+    log.info(f"DEBUG_APP 模式: {DEBUG_APP}, 运行模式: {MODE}")
 
     override_index_zoom()
 
     host = "127.0.0.1"
-    port = 5000
+    port = 31722
     server_url = f"http://{host}:{port}"
 
-    if DEBUG:
-        # In Debug mode, Flask's reloader will restart the process.
-        # We handle browser opening logic carefully.
+    if DEBUG_APP:
+        # 在DEBUG_APP模式下，Flask的reloader会重启进程。
+        # 我们小心处理浏览器打开逻辑，确保只在主进程（在reload前）或reloader禁用时打开浏览器。
+        # 但是，在reloader开启的情况下，服务器会在子进程中启动。
+        # 为了避免竞态条件，我们应该在子进程中启动一个线程，等待服务器启动后再打开浏览器。
 
         if MODE == "app":
-            log.debug("测试浏览器APP模式.")
+            log.debug("应用以浏览器APP模式打开.")
             # Only open browser if this is the main process (before reload) OR if reloader is disabled
             # But with reloader, the server starts in the child process.
             # To avoid race condition, we should start a thread that waits for server then opens browser.
 
             def open_browser_delayed():
                 if wait_for_server(host, port):
-                    open_browser_in_app_mode(server_url)
+                    open_in_app_mode(server_url)
                 else:
-                    log.error("Server failed to start in time.")
+                    log.error("服务器没能在超时时间内启动, 浏览器打开失败.")
 
             # Only start this thread if we are in the reloader process (server is running)
             # or if we are just starting and expect the server to come up.
@@ -188,7 +195,7 @@ def main():
                 log.info("服务器已成功关闭")
 
         elif MODE == "browser":
-            log.debug("测试浏览器普通模式.")
+            log.debug("应用以浏览器网页模式打开.")
 
             def open_browser_delayed():
                 if wait_for_server(host, port):
@@ -203,7 +210,7 @@ def main():
                 log.info("服务器已成功关闭")
 
         elif MODE == "desktop":
-            log.debug("测试桌面应用模式.")
+            log.debug("应用以桌面应用模式打开.")
             if webview:
                 # Desktop mode usually disables reloader to avoid pywebview issues
                 # Use OriginalThread to run server in a separate OS thread
@@ -225,7 +232,7 @@ def main():
                     )
                     webview.start()
                 else:
-                    log.error("Server failed to start. Exiting.")
+                    log.error("服务器没能在超时时间内启动, 桌面应用打开失败.")
                     return
 
             else:
@@ -237,7 +244,7 @@ def main():
             return
 
     else:
-        # Non-Debug Mode
+        # 非DEBUG_APP模式
         if webview and MODE == "desktop":
             log.info("检测到 pywebview, 启动桌面应用模式.")
             log.debug("启动服务器线程")
@@ -248,9 +255,9 @@ def main():
             t.daemon = True
             t.start()
 
-            log.debug("Waiting for server to be ready...")
+            log.debug("等待服务器就绪...")
             if wait_for_server(host, port):
-                log.debug("Server ready, starting webview")
+                log.debug("服务器已就绪, 启动桌面应用...")
                 window = webview.create_window(
                     "Ludus Engine",
                     server_url,
@@ -260,10 +267,10 @@ def main():
                 )
                 webview.start()
             else:
-                log.error("Server failed to start in time.")
+                log.error("服务器没能在超时时间内启动, 桌面应用打开失败.")
 
         else:
-            # Browser or App mode (Non-Debug)
+            # Browser或App模式
             log.info(f"启动模式: {MODE}. 启动服务器线程...")
             # Use OriginalThread
             t = OriginalThread(
@@ -272,13 +279,13 @@ def main():
             t.daemon = True
             t.start()
 
-            log.debug("Waiting for server to be ready...")
+            log.debug("等待服务器就绪...")
             if wait_for_server(host, port):
-                log.debug("Server ready, opening browser")
+                log.debug("服务器已就绪, 打开浏览器...")
                 if MODE == "browser":
                     webbrowser.open_new(server_url)
                 else:
-                    open_browser_in_app_mode(server_url)
+                    open_in_app_mode(server_url)
 
                 # IMPORTANT: Keep the main thread alive!
                 # Since we are not using pywebview's blocking loop here,
@@ -287,9 +294,9 @@ def main():
                     while t.is_alive():
                         t.join(1)
                 except KeyboardInterrupt:
-                    log.info("Stopping server...")
+                    log.info("服务器线程已被中断, 正在关闭服务器...")
             else:
-                log.error("Server failed to start in time.")
+                log.error("服务器没能在超时时间内启动, 应用打开失败.")
 
 
 if __name__ == "__main__":

@@ -2,28 +2,3 @@ app:
   name: LudusEngine
   author: Churk_Ben
   version: 1.1
-
-players:
-  - name: Aurore
-    human: false
-    model: moonshot/kimi-k2-0905-preview
-
-  - name: Bob
-    human: false
-    model: moonshot/kimi-k2-0905-preview
-
-  - name: Churk
-    human: false
-    model: moonshot/kimi-thinking-preview
-
-  - name: David
-    human: false
-    model: deepseek/deepseek-reasoner
-
-  - name: Eve
-    human: false
-    model: deepseek/deepseek-chat
-
-  - name: Frank
-    human: false
-    model: deepseek/deepseek-reasoner

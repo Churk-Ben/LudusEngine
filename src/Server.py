@@ -88,11 +88,11 @@ def on_disconnect():
     if request.sid == connected_client_sid:
         log.info(f"客户端 {request.sid} 已断开, 正在关闭服务器...")
         connected_client_sid = None
-        
+
         # 检查是否允许关闭
         # 默认允许关闭 (0), 除非 DEBUG_GAME 明确设为 1
         debug_game = os.getenv("DEBUG_GAME", "0")
-        
+
         if debug_game == "1":
             log.info("Debug 模式下保持服务器运行 (DEBUG_GAME=1)")
         else:
