@@ -52,13 +52,12 @@ def index_root():
 
 @app.get("/<path:path>")
 def serve_static(path):
-    log.debug(f"Request static file: {path}")
+    log.debug(f"请求静态资源: {path}")
     target = STATIC_DIR / path
     if target.exists():
         return send_from_directory(app.static_folder, path)
 
-    # Fallback to index.html for SPA routing
-    # Check if the path looks like an API call or something that shouldn't fallback
+    # 检查是否是 API 调用或其他不应 fallback 的路径
     if path.startswith("api/") or path.startswith("socket.io"):
         return jsonify({"ok": False, "error": "Not Found"}), 404
 
@@ -90,11 +89,11 @@ def on_disconnect():
         connected_client_sid = None
 
         # 检查是否允许关闭
-        # 默认允许关闭 (0), 除非 DEBUG_GAME 明确设为 1
-        debug_game = os.getenv("DEBUG_GAME", "0")
+        # 默认允许关闭 (0), 除非 DEBUG_SERVER 明确设为 1
+        DEBUG_SERVER = os.getenv("DEBUG_SERVER", "0") == "1"
 
-        if debug_game == "1":
-            log.info("Debug 模式下保持服务器运行 (DEBUG_GAME=1)")
+        if DEBUG_SERVER:
+            log.info("Debug 模式下保持服务器运行 (DEBUG_SERVER=1)")
         else:
             # 正常退出
             log.info("正在停止服务器...")
