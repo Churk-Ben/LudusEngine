@@ -84,11 +84,30 @@ class Player:
         history.append({"role": "user", "content": prompt})
 
         try:
-            response = completion(
-                model=self.config.get("model", "gpt-3.5-turbo"),
-                messages=history,
-                stream=False,
-            )
+            model = self.config.get("model", "gpt-3.5-turbo")
+            provider = self.config.get("providerId")
+            api_base = self.config.get("apiBase")
+
+            # 构建 completion 参数
+            completion_kwargs = {
+                "model": model,
+                "messages": history,
+                "stream": False,
+            }
+
+            # 如果指定了 provider，且 model 中没有包含 /，则尝试组合
+            # 或者直接作为参数传递（取决于 litellm 版本，通常 model="provider/model_name" 是推荐方式）
+            if provider and provider != "default":
+                # 对于某些 provider，可能需要显式传递 custom_llm_provider 或者修改 model 字符串
+                # 如果 model 已经包含了 provider（例如 "openai/gpt-4"），则不重复添加
+                if "/" not in model:
+                    completion_kwargs["model"] = f"{provider}/{model}"
+
+            if api_base:
+                completion_kwargs["api_base"] = api_base
+
+            response = completion(**completion_kwargs)
+
             ai_choice = response.choices[0].message.content
             for choice in valid_choices:
                 if choice in ai_choice:
@@ -206,11 +225,26 @@ class Player:
         history.append({"role": "user", "content": prompt_text})
 
         try:
-            response = completion(
-                model=self.config.get("model", "gpt-3.5-turbo"),
-                messages=history,
-                stream=False,
-            )
+            model = self.config.get("model", "gpt-3.5-turbo")
+            provider = self.config.get("providerId")
+            api_base = self.config.get("apiBase")
+
+            # 构建 completion 参数
+            completion_kwargs = {
+                "model": model,
+                "messages": history,
+                "stream": False,
+            }
+
+            if provider and provider != "default":
+                if "/" not in model:
+                    completion_kwargs["model"] = f"{provider}/{model}"
+
+            if api_base:
+                completion_kwargs["api_base"] = api_base
+
+            response = completion(**completion_kwargs)
+
             speech = response.choices[0].message.content
             if self.game_logger:
                 self.game_logger.system_logger.info(

@@ -1,61 +1,53 @@
 {
   "human": [
     {
-      "name": "Churk",
+      "name": "Aurore",
       "type": "human",
       "prefixPrompt": "窝是人类喵, 窝说话不像你们一样有条理喵, 窝还是新手喵, 让让窝喵...",
-      "uuid": "3146a9d0-2ac3-467f-b144-c02348e5f239"
+      "uuid": "964463cb-ea82-464a-bff7-ea29b086a7a3"
     }
   ],
   "online": [
     {
-      "name": "Deepseek-r1",
+      "name": "David",
       "type": "online",
       "providerId": "deepseek",
-      "model": "reasoner",
-      "apiKey": "rk_j98234bhqi39729f8h234",
-      "uuid": "c59a4c08-f5bb-48f4-8e09-328f48020eec"
+      "model": "deepseek-reasoner",
+      "apiKey": "SETED",
+      "uuid": "df56e96b-9679-400f-ac9c-61f29392af0d"
     },
     {
-      "name": "Gemini",
+      "name": "Bob",
+      "type": "online",
+      "providerId": "deepseek",
+      "model": "deepseek-chat",
+      "apiKey": "SETED",
+      "uuid": "61024ce6-ea93-476a-8fec-c33c7d54632c"
+    },
+    {
+      "name": "Churk",
+      "type": "online",
+      "providerId": "moonshot",
+      "model": "kimi-thinking-preview",
+      "apiKey": "SETED",
+      "uuid": "9cc0df60-e675-4177-a57a-4546b4f8a088"
+    },
+    {
+      "name": "Eve",
       "type": "online",
       "providerId": "gemini",
-      "model": "2.5-pro",
-      "apiKey": "gk_iytbcq897t435vq3w56g",
-      "uuid": "4c0746b3-b062-4f70-82ff-1be195bf5c37"
+      "model": "gemini-2.5-pro",
+      "apiKey": "SETED",
+      "uuid": "3a934ff7-45b4-4dd5-a6d2-c9a671f67ebd"
     },
     {
-      "name": "呜呜呜",
+      "name": "Frank",
       "type": "online",
       "providerId": "deepseek",
-      "model": "chat-v3",
-      "apiKey": "rk_sdkjfsdfasfg",
-      "uuid": "6ae44995-2829-4635-b7c3-f7dfd48b8e29"
-    },
-    {
-      "name": "Aurore",
-      "type": "online",
-      "providerId": "aiml",
-      "model": "chat-v3",
-      "apiKey": "ouinyavoepiuyhcmofser",
-      "uuid": "1c1b9b05-4d77-4069-9142-9c8b228300bd"
-    },
-    {
-      "name": "Eris",
-      "type": "online",
-      "providerId": "deepseek",
-      "model": "reasoner-r1",
-      "apiKey": "rk_diugfaoiugsebcjcahgiegca",
-      "uuid": "c7012994-695d-4db5-813d-7fc527fde836"
+      "model": "deepseek-chat",
+      "apiKey": "SETED",
+      "uuid": "b83dd815-a455-46eb-b8a1-09eca30ca631"
     }
   ],
-  "local": [
-    {
-      "name": "Test",
-      "type": "local",
-      "modelPath": "F:\\",
-      "parameters": "--temperature=1",
-      "uuid": "ef261e2e-a793-4a44-b74e-a7d05327e121"
-    }
-  ]
+  "local": []
 }

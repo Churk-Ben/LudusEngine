@@ -19,7 +19,9 @@ if not USERS_DIR.exists():
     with open(players_file, "w", encoding="UTF-8") as f:
         init_players_file = {"human": [], "online": [], "local": []}
         json.dump(init_players_file, f, ensure_ascii=False, indent=2)
-
+else:
+    players_file = USERS_DIR / "players.json"
+    apikeys_file = USERS_DIR / "apikeys.env"
 
 players_bp = Blueprint("players", __name__)
 players_log = get_logger("PlayerService")
@@ -28,8 +30,16 @@ players_store = {"human": [], "online": [], "local": []}
 
 # 从长期存储加载玩家到内存
 if USERS_DIR.exists():
-    with open(USERS_DIR / "players.json", "r", encoding="UTF-8") as f:
+    with open(players_file, "r", encoding="UTF-8") as f:
         players_store = json.load(f)
+
+    with open(apikeys_file, "r", encoding="UTF-8") as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith("#"):
+                _env_name, _api_key = line.split("=", 1)
+                os.environ[_env_name] = _api_key
+                players_log.info(f"已加载环境变量 {_env_name}")
 
 
 # 根据uuid获取玩家数据
@@ -102,11 +112,32 @@ def api_players_add_post():
     if "uuid" not in player_data or not player_data["uuid"]:
         player_data["uuid"] = str(uuid.uuid4())
 
+    # 处理大语言模型APIKEY, 不存入玩家数据, 而是根据provider写入环境变量文件
+    if "apiKey" in player_data:
+        provider_id = player_data.get("providerId", "default")
+        _env_name = f"{provider_id.upper()}_API_KEY"
+        api_key = player_data.get("apiKey")
+        os.environ[_env_name] = api_key
+        player_data["apiKey"] = "SETED"
+
+        with open(apikeys_file, "a+", encoding="UTF-8") as f:
+            f.seek(0)
+            # 检查文件中是否已存在该变量
+            found = False
+            for line in f:
+                if line.startswith(_env_name):
+                    found = True
+                    players_log.warning(f"环境变量 {_env_name} 已存在, 不会重复写入")
+                    break
+            if not found:
+                f.write(f"{_env_name}={api_key}\n")
+                players_log.info(f"已写入环境变量 {_env_name}")
+
     players_store[player_type].append(player_data)
 
-    # 持久化
+    # 非隐私数据持久化
     try:
-        with open(USERS_DIR / "players.json", "w", encoding="UTF-8") as f:
+        with open(players_file, "w", encoding="UTF-8") as f:
             json.dump(players_store, f, ensure_ascii=False, indent=2)
     except Exception as e:
         players_log.error(f"玩家数据保存失败: {e}")
@@ -132,7 +163,7 @@ def api_players_remove_delete(pid):
 
     # 将变更持久化到文件
     try:
-        with open(USERS_DIR / "players.json", "w", encoding="UTF-8") as f:
+        with open(players_file, "w", encoding="UTF-8") as f:
             json.dump(players_store, f, ensure_ascii=False, indent=2)
     except Exception as e:
         players_log.error(f"玩家数据删除失败: {e}")
