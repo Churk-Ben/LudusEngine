@@ -35,8 +35,8 @@
     {
       "name": "Eve",
       "type": "online",
-      "providerId": "gemini",
-      "model": "gemini-2.5-pro",
+      "providerId": "deepseek",
+      "model": "deepseek-chat",
       "apiKey": "SETED",
       "uuid": "3a934ff7-45b4-4dd5-a6d2-c9a671f67ebd"
     },

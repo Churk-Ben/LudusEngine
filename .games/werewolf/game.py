@@ -3,6 +3,7 @@ from enum import Enum
 import json
 import time
 import random
+import os
 from typing import Any, Dict, List, Optional
 from pathlib import Path
 import sys
@@ -606,23 +607,64 @@ if __name__ == "__main__":
     game_dir = Path(__file__).resolve().parent
     config_path = game_dir / "config.json"
 
+    users_dir = BASE / ".users"
+    players_path = users_dir / "players.json"
+    apikeys_path = users_dir / "apikeys.env"
+
+    # Load API Keys
+    if apikeys_path.exists():
+        try:
+            with open(apikeys_path, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith("#"):
+                        try:
+                            key, value = line.split("=", 1)
+                            os.environ[key] = value
+                        except ValueError:
+                            pass
+        except Exception:
+            pass
+
+    init_players = []
+
+    # Try loading from players.json first
     try:
-        with open(config_path, "r", encoding="utf-8") as f:
-            config_data = json.load(f)
-            # 为 GameLogger 构建玩家列表
-            init_players = []
-            for p in config_data.get("players", []):
-                init_players.append(
-                    {
-                        "player_name": p["name"],
-                        "player_uuid": p.get(
-                            "uuid", p["name"]
-                        ),  # 如果缺少 uuid，则使用 name
-                    }
-                )
+        if players_path.exists():
+            with open(players_path, "r", encoding="utf-8") as f:
+                p_data = json.load(f)
+                for p_type in ["human", "online", "local"]:
+                    for p in p_data.get(p_type, []):
+                        init_players.append(
+                            {
+                                "player_name": p["name"],
+                                "player_uuid": p.get("uuid", p["name"]),
+                                "human": (p_type == "human"),
+                                **p,
+                            }
+                        )
     except Exception as e:
-        print(f"Error loading config for main: {e}")
-        init_players = []
+        print(f"Error loading players.json: {e}")
+
+    # Fallback to config.json if no players found
+    if not init_players:
+        try:
+            with open(config_path, "r", encoding="utf-8") as f:
+                config_data = json.load(f)
+                # 为 GameLogger 构建玩家列表
+                for p in config_data.get("players", []):
+                    init_players.append(
+                        {
+                            "player_name": p["name"],
+                            "player_uuid": p.get(
+                                "uuid", p["name"]
+                            ),  # 如果缺少 uuid，则使用 name
+                            **p,
+                        }
+                    )
+        except Exception as e:
+            print(f"Error loading config for main: {e}")
+            init_players = []
 
     game = WerewolfGame(init_players)
     game.run_game()

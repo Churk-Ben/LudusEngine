@@ -4,6 +4,7 @@ from typing import List, Dict, Optional, Any, Callable, Tuple, Union
 from pathlib import Path
 import sys
 import json
+import os
 
 # 确保项目根目录在路径中
 BASE = Path(__file__).resolve().parent.parent
@@ -165,24 +166,58 @@ class Game(ABC):
     def load_basic_config(self, game_dir: Path) -> Tuple[Dict, Dict, Dict[str, Dict]]:
         """
         从游戏目录加载 config.json 和 prompt.json.
+        同时从 .users/players.json 加载玩家信息, 从 .users/apikeys.env 加载环境变量.
         将配置中的玩家数据与初始玩家数据合并.
         返回 (config, prompts, player_config_map).
         """
         config_path = game_dir / "config.json"
         prompt_path = game_dir / "prompt.json"
 
+        users_dir = BASE / ".users"
+        players_path = users_dir / "players.json"
+        apikeys_path = users_dir / "apikeys.env"
+
         config = {}
         prompts = {}
         player_config_map = {}
 
+        # 1. Load API keys
+        if apikeys_path.exists():
+            try:
+                with open(apikeys_path, "r", encoding="utf-8") as f:
+                    for line in f:
+                        line = line.strip()
+                        if line and not line.startswith("#"):
+                            try:
+                                key, value = line.split("=", 1)
+                                os.environ[key] = value
+                            except ValueError:
+                                pass
+            except Exception as e:
+                self.logger.system_logger.error(f"加载环境变量失败: {e}")
+
         try:
+            # 2. Load players from players.json
+            loaded_players = []
+            if players_path.exists():
+                with open(players_path, "r", encoding="utf-8") as f:
+                    p_data = json.load(f)
+                    for p_type in ["human", "online", "local"]:
+                        for p in p_data.get(p_type, []):
+                            p["human"] = p_type == "human"
+                            loaded_players.append(p)
+
             with open(config_path, "r", encoding="utf-8") as file:
                 config = json.load(file)
-                # 如果 __init__ 中未提供玩家, 则从配置加载
+
+                # 如果没从 players.json 加载到玩家，尝试从 config.json 加载 (兼容旧版)
+                if not loaded_players:
+                    loaded_players = config.get("players", [])
+
+                # 如果 __init__ 中未提供玩家, 则使用加载的玩家
                 if not self._players_data:
-                    player_configs = config.get("players", [])
                     self._players_data = []
-                    for p in player_configs:
+                    for p in loaded_players:
                         self._players_data.append(
                             {
                                 "player_name": p["name"],
@@ -199,7 +234,7 @@ class Game(ABC):
 
                 # 构建按名称查找配置的映射
                 # 首先填充配置数据
-                for p in config.get("players", []):
+                for p in loaded_players:
                     player_config_map[p["name"]] = p
                 # 然后使用传递的玩家数据更新/覆盖
                 for p in self._players_data:
