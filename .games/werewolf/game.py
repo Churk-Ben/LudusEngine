@@ -15,6 +15,9 @@ if str(BASE) not in sys.path:
 
 from src.Game import Game, GameAction, GamePhase, GameStep, ActionContext
 from src.Player import Player
+from src.players.Human import Human
+from src.players.Online import Online
+from src.players.Local import Local
 from src.Logger import (
     GameLogger,
 )  # 如果需要，导入用于类型提示，尽管 Game 处理实例化
@@ -478,7 +481,22 @@ class WerewolfGame(Game):
 
         for name, role in zip(self.all_player_names, role_list):
             p_config = player_config_map.get(name, {})
-            player = Player(
+
+            p_type = p_config.get("type")
+            if not p_type:
+                if p_config.get("human"):
+                    p_type = "human"
+                else:
+                    p_type = "online"
+
+            if p_type == "human":
+                PlayerClass = Human
+            elif p_type == "local":
+                PlayerClass = Local
+            else:
+                PlayerClass = Online
+
+            player = PlayerClass(
                 name,
                 role,
                 p_config,

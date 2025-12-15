@@ -205,6 +205,7 @@ class Game(ABC):
                     for p_type in ["human", "online", "local"]:
                         for p in p_data.get(p_type, []):
                             p["human"] = p_type == "human"
+                            p["type"] = p_type
                             loaded_players.append(p)
 
             with open(config_path, "r", encoding="utf-8") as file:
