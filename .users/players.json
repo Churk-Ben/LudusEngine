@@ -49,5 +49,13 @@
       "uuid": "b83dd815-a455-46eb-b8a1-09eca30ca631"
     }
   ],
-  "local": []
+  "local": [
+    {
+      "name": "Gorge",
+      "type": "local",
+      "modelPath": "/mnt/Project/LLM",
+      "parameters": "-temperature=1.2",
+      "uuid": "6bfeb324-c70f-4102-9700-b04bcdcdff99"
+    }
+  ]
 }
