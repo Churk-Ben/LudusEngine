@@ -141,10 +141,12 @@ def wait_for_server(host, port, timeout=10):
 def main():
     config = load_config()
     log.info(f"配置加载完成: {config}")
-
+    DEBUG_SERVER = os.getenv("DEBUG_SERVER", "0") == "1"
+    DEBUG_GAME = os.getenv("DEBUG_GAME", "0") == "1"
     DEBUG_APP = os.getenv("DEBUG_APP", "0") == "1"
     MODE = os.getenv("MODE", "desktop")
-    log.info(f"DEBUG_APP 模式: {DEBUG_APP}, 运行模式: {MODE}")
+    ZOOM = os.getenv("ZOOM", "1.5")
+    log.info(f"DEBUG_APP 模式: {DEBUG_APP}, DEBUG_SERVER 模式: {DEBUG_SERVER}, DEBUG_GAME 模式: {DEBUG_GAME}, 运行模式: {MODE}, 缩放比例: {ZOOM}")
 
     override_index_zoom()
 
